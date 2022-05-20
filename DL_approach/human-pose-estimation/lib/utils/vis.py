@@ -118,8 +118,8 @@ def save_batch_heatmaps(batch_image, batch_heatmaps, file_name,
 
 def save_debug_images(config, input, meta, target, joints_pred, output,
                       prefix):
-    if not config.DEBUG.DEBUG:
-        return
+    # if not config.DEBUG.DEBUG:
+    #     return
 
     if config.DEBUG.SAVE_BATCH_IMAGES_GT:
         save_batch_image_with_joints(
