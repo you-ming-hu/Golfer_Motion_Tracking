@@ -22,15 +22,15 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 
 import _init_paths
-from core.config import config
-from core.config import update_config
-from core.config import update_dir
-from core.loss import JointsMSELoss
-from core.function import validate
-from utils.utils import create_logger
+from lib.core.config import config
+from lib.core.config import update_config
+from lib.core.config import update_dir
+from lib.core.loss import JointsMSELoss
+from lib.core.function import validate
+from lib.utils.utils import create_logger
 
-import dataset
-import models
+import lib.dataset as dataset
+import lib.models as models
 
 
 def parse_args():
@@ -122,8 +122,7 @@ def main():
         logger.info('=> loading model from {}'.format(config.TEST.MODEL_FILE))
         model.load_state_dict(torch.load(config.TEST.MODEL_FILE))
     else:
-        model_state_file = os.path.join(final_output_dir,
-                                        'final_state.pth.tar')
+        model_state_file = os.path.join(final_output_dir,'final_state.pth.tar')
         logger.info('=> loading model from {}'.format(model_state_file))
         model.load_state_dict(torch.load(model_state_file))
 

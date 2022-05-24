@@ -6,3 +6,4 @@ DL_approach/human-pose-estimation.pytorch-master/coco/
 *.pyc
 *.tar
 DL_approach/human-pose-estimation/coco/
+DL_approach/human-pose-estimation/GolferPrediction/
