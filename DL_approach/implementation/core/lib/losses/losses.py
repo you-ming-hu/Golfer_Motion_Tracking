@@ -254,7 +254,7 @@ class BBoxGIOU(BaseLoss):
         left_up = torch.maximum(p_coor[:,:2], y_coor[:,:2])
         right_down = torch.minimum(p_coor[:,2:], y_coor[:,2:])
 
-        inter_section = torch.maximum(right_down - left_up, 0.0)
+        inter_section = torch.maximum(right_down - left_up, torch.tensor(0,dtype=torch.float32))
         inter_area = inter_section[:, 0] * inter_section[:, 1]
         
         union_area = p_area + y_area - inter_area
