@@ -195,8 +195,8 @@ class KeypointsBCE(BaseLoss):
         else:
             p = p[flag!=0]
             y = y[flag!=0]
-        
-            losses = torch.binary_cross_entropy_with_logits(p,y,reduction='none') #(B,C,(x,y))
+            
+            losses = torch.nn.functional.binary_cross_entropy_with_logits(p,y,reduction='none') #(B,C,(x,y))
             losses = torch.sum(losses,axis=2) #(B,C)
             
             losses = losses*cf
