@@ -217,7 +217,7 @@ class BBoxGIOU(BaseLoss):
     def __init__(self,name,shcedule):
         super().__init__(name,shcedule,None)
         
-    def call(self,flag,p,y,cf):
+    def call(self,p,y):
         flag = y['flag']
         cf = y['cf']
         y = y['xywh']
