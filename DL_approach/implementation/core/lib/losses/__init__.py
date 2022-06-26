@@ -34,7 +34,7 @@ class HybridLoss:
                 l.reset_state()
     
     def update_state(self,name,loss):
-        self.losses[name]['acc_loss'] = self.losses[name]['acc_loss'] + loss.cpu().numpy()
+        self.losses[name]['acc_loss'] = self.losses[name]['acc_loss'] + loss.cpu().detach().numpy()
         self.losses[name]['acc_count'] = self.losses[name]['acc_count'] + 1
         
     def result(self):

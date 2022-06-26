@@ -21,8 +21,8 @@ class BaseLoss:
         self.buffer = {'acc_count':np.zeros(self.buffer_size),'acc_loss':np.zeros(self.buffer_size)}
         
     def update_state(self,acc_loss,acc_count):
-        self.buffer['acc_loss'] = self.buffer['acc_loss'] + acc_loss.cpu().numpy()
-        self.buffer['acc_count'] = self.buffer['acc_count'] + acc_count.cpu().numpy()
+        self.buffer['acc_loss'] = self.buffer['acc_loss'] + acc_loss.cpu().detach().numpy()
+        self.buffer['acc_count'] = self.buffer['acc_count'] + acc_count.cpu().detach().numpy()
         
     def result(self):
         output = {}
@@ -146,11 +146,11 @@ class ConfidenceFocalLoss(BaseLoss):
     def update_state(self,acc_loss,acc_count,p,y):
         super().update_state(acc_loss,acc_count)
         if self.record['p'] is None:
-            self.record['p'] = p.cpu().numpy()
-            self.record['y'] = y.cpu().numpy()
+            self.record['p'] = p.cpu().detach().numpy()
+            self.record['y'] = y.cpu().detach().numpy()
         else:
-            self.record['p'] = np.concatenate([self.record['p'],p.cpu().numpy()],axis=0)
-            self.record['y'] = np.concatenate([self.record['y'],y.cpu().numpy()],axis=0)
+            self.record['p'] = np.concatenate([self.record['p'],p.cpu().detach().numpy()],axis=0)
+            self.record['y'] = np.concatenate([self.record['y'],y.cpu().detach().numpy()],axis=0)
     
     def pr_curve(self):
         output = {}
