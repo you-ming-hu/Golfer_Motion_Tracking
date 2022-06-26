@@ -195,11 +195,12 @@ class KeypointsBCE(BaseLoss):
         else:
             p = p[flag!=0]
             y = y[flag!=0]
+            cf = cf[flag!=0]
             
             losses = torch.nn.functional.binary_cross_entropy_with_logits(p,y,reduction='none') #(B,C,(x,y))
             losses = torch.sum(losses,axis=2) #(B,C)
             
-            losses = losses*cf
+            losses = losses * cf
             
             acc_loss = torch.sum(losses,axis=0)
             acc_count = torch.sum(cf,axis=0)
@@ -227,6 +228,7 @@ class BBoxGIOU(BaseLoss):
         else:
             p = p[flag!=0]
             y = y[flag!=0]
+            cf = cf[flag!=0]
             
             p = torch.sigmoid(p)
             loss = self.giou_loss(p,y)
