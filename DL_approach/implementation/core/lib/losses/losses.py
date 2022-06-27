@@ -38,7 +38,7 @@ class BaseLoss:
         losses = self.result()
         for n,l in losses.items():
             if l is not None:
-                writer.add_scaler(n,l,data_count)
+                writer.add_scalar(n,l,data_count)
     
     def __str__(self):
         return self.__class__.__name__ + '('+ ','.join([self.name]+[f'{k}={v}' for k,v in self.kwdarg.items()]) + ')'
