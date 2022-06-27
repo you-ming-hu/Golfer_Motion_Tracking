@@ -120,6 +120,7 @@ class ConfidenceFocalLoss(BaseLoss):
         else:
             p = p[flag!=0]
             y = y[flag!=0]
+            self.update_state(acc_loss,acc_count,p,y)
             
             p = torch.sigmoid(p)
             y = (1-self.label_smoothing)*y + self.label_smoothing*(1-y)
@@ -136,7 +137,6 @@ class ConfidenceFocalLoss(BaseLoss):
             
             loss = total_loss/total_count
             
-            self.update_state(acc_loss,acc_count,p,y)
             
         return loss
     
