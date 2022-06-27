@@ -77,11 +77,11 @@ for _ in range(training_epochs):
         if training_step_count % steps_per_record == 0:
             core.utils.update_stage_result(dataloader,loss_func.result())
             loss_func.log(writer,training_data_count)
-            writer.add_scaler('learning_rate',lr,training_data_count)
+            writer.add_scalar('learning_rate',lr,training_data_count)
     
     if training_step_count % steps_per_record != 0:
         loss_func.log(writer,training_data_count)
-        writer.add_scaler('learning_rate',lr,training_data_count)
+        writer.add_scalar('learning_rate',lr,training_data_count)
     
     core.utils.save_model(model,training_epoch_count,Config)
                 
