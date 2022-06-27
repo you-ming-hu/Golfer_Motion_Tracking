@@ -78,6 +78,9 @@ for _ in range(training_epochs):
             core.utils.update_stage_result(dataloader,loss_func.result())
             loss_func.log(writer,training_data_count)
             writer.add_scalar('learning_rate',lr,training_data_count)
+            
+        if training_step_count == 10:
+            break
     
     if training_step_count % steps_per_record != 0:
         loss_func.log(writer,training_data_count)

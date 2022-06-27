@@ -187,7 +187,12 @@ class DataAugProcessor(DataProcessorBase):
     def process_coco_human(self,data):
         #load original data
         img_info,clean_anns,leading_role_id = data
-        image = cv2.cvtColor(cv2.imread(img_info['file_name']),cv2.COLOR_BGR2RGB)
+        try:
+            image = cv2.cvtColor(cv2.imread(img_info['file_name']),cv2.COLOR_BGR2RGB)
+        except:
+            print(img_info['file_name'])
+            print(cv2.imread(img_info['file_name']).shape)
+            raise Exception 
         bboxes_size = np.array([b['bbox'][2:] for b in clean_anns])
         keypoints_xy = np.array([k['keypoints_xy'] for k in clean_anns])
         keypoints_cf = np.array([k['keypoints_cf'] for k in clean_anns])

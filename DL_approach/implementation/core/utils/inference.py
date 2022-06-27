@@ -60,4 +60,3 @@ def visualize(
         
         image_count = len(list(save_path.iterdir()))
         plt.savefig(save_path.joinpath(f'{image_count:0>5}').with_suffix('.jpg').as_posix(),bbox_inches='tight')
-        plt.show()
