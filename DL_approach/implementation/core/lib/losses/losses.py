@@ -45,6 +45,7 @@ class BaseLoss:
     
     def __call__(self,p,y):
         loss = self.call(p[self.name],y[self.name])
+        print(self.__class__.__name__,self.name,loss,sep=',')
         return loss
     
     def call(self,p,y):
