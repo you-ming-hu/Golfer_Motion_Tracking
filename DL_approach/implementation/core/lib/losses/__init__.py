@@ -42,10 +42,16 @@ class HybridLoss:
     
     def log(self,writer,data_count):
         losses = self.result()
+        loss = losses['hybrid_loss']
+        if loss is not None:
+            writer.add_scalar('hybrid_loss',loss,data_count)
+        
         for _,l in self.__dict__.items():
-            if losses[str(l)] is not None:
-                writer.add_scalar(str(l),losses[str(l)],data_count)
-            l.log(writer,data_count)
+            if isinstance(l,BaseLoss):
+                loss = losses[str(l)]
+                if loss is not None:
+                    writer.add_scalar(str(l),loss,data_count)
+                l.log(writer,data_count)
             
         self.reset_state()
     

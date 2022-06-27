@@ -72,14 +72,14 @@ def save_config(Config):
     SummaryWriter(save_root.joinpath('record','config').as_posix()).add_text('Config',str(Config),0)
 
 def update_stage_result(dataloader,losses):
-    contents = {}
-    for n,l in losses.items():
-        if l is not None:
-            print(l)
-            contents[n] = '{:.4f}'.format(l)
-        else:
-            contents[n] = 'None'
-    dataloader.set_postfix(**contents)
+    # contents = {}
+    # for n,l in losses.items():
+    #     if l is not None:
+    #         print(l)
+    #         contents[n] = '{:.4f}'.format(l)
+    #     else:
+    #         contents[n] = 'None'
+    dataloader.set_postfix(**{k:'{:.4f}'.format(v) if v is not None else 'None' for k,v in losses.items()})
     
 def save_model(model,epoch_count,Config):
     if Config.Record.SaveModelWeights:
