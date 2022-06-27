@@ -74,7 +74,7 @@ class DataReader:
         coco_dummy = []
         coco_human = []
         for image_info in coco.imgs.values():
-            image_info['file_name'] = pathlib.Path(coco_path,'train2017',image_info['file_name']).as_posix()
+            image_info['file_name'] = pathlib.Path(coco_path,f'{stage}2017',image_info['file_name']).as_posix()
             anns = coco.getAnnIds(image_info['id'])
             
             if len(anns) == 0:
