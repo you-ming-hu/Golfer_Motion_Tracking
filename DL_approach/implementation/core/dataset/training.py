@@ -533,7 +533,7 @@ class DataAugProcessor(DataProcessorBase):
             #random shift (including making head outlying) or not
             if bool(np.random.binomial(1,p=random_shift_prob)):
                 #random shift with golfclub head outside image
-                if bool(np.random.binomial(1,p=head_outlying_rate/random_shift_prob)&(head_random_shift[0]!=0)):
+                if bool(np.random.binomial(1,p=head_outlying_rate/random_shift_prob)&(head_random_shift!=0).all()):
                     x_a = head_random_shift[0]
                     x_b = x_a + x_a/abs(x_a)*abs(vector[0])*clubhead_ratio
                     y_a = head_random_shift[1]
