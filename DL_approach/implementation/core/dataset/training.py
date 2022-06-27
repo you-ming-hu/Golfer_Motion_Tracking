@@ -28,8 +28,15 @@ class DataReader:
         coco_dummy_count = int(coco_count*dummy_ratio)
         coco_human_count = coco_count-coco_dummy_count
         
-        coco_human = self.random_state.sample(self.coco_human,k=coco_human_count)
-        coco_dummy = self.random_state.sample(self.coco_dummy,k=coco_dummy_count)
+        if coco_human_count >= len(self.coco_human):
+            coco_human = self.coco_human
+        else:
+            coco_human = self.random_state.sample(self.coco_human,k=coco_human_count)
+
+        if coco_dummy_count >= len(self.coco_dummy):
+            coco_dummy = self.coco_dummy
+        else:
+            coco_dummy = self.random_state.sample(self.coco_dummy,k=coco_dummy_count)
         
         self.dataset = self.golfer + coco_human + coco_dummy
         return self
