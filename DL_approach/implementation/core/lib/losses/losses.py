@@ -120,9 +120,10 @@ class ConfidenceFocalLoss(BaseLoss):
         else:
             p = p[flag!=0]
             y = y[flag!=0]
-            self.update_state(acc_loss,acc_count,p,y)
             
             p = torch.sigmoid(p)
+            self.update_record(p,y)
+            
             y = (1-self.label_smoothing)*y + self.label_smoothing*(1-y)
             p = torch.stack([1-p,p],axis=1)
             y = torch.stack([1-y,y],axis=1)
@@ -137,6 +138,7 @@ class ConfidenceFocalLoss(BaseLoss):
             
             loss = total_loss/total_count
             
+            self.update_state(acc_loss,acc_count)
             
         return loss
     
@@ -144,8 +146,7 @@ class ConfidenceFocalLoss(BaseLoss):
         super().reset_state()
         self.record = {'p':None,'y':None}
     
-    def update_state(self,acc_loss,acc_count,p,y):
-        super().update_state(acc_loss,acc_count)
+    def update_record(self,p,y):
         if self.record['p'] is None:
             self.record['p'] = p.cpu().detach().numpy()
             self.record['y'] = y.cpu().detach().numpy()
