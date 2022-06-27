@@ -75,6 +75,7 @@ def update_stage_result(dataloader,loss_func):
     contents = {}
     for n,l in loss_func.losses.items():
         if l is not None:
+            print(l)
             contents[n] = '{:.4f}'.format(l)
         else:
             contents[n] = 'None'
