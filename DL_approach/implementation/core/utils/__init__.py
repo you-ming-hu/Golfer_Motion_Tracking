@@ -71,9 +71,9 @@ def save_config(Config):
     pickle.dump(Config,save_root.joinpath('config.pkl').open('wb'))
     SummaryWriter(save_root.joinpath('record','config').as_posix()).add_text('Config',str(Config),0)
 
-def update_stage_result(dataloader,loss_func):
+def update_stage_result(dataloader,losses):
     contents = {}
-    for n,l in loss_func.losses.items():
+    for n,l in losses.items():
         if l is not None:
             print(l)
             contents[n] = '{:.4f}'.format(l)

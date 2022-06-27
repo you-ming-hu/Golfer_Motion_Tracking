@@ -75,7 +75,7 @@ for _ in range(training_epochs):
             optimizer.zero_grad()
         
         if training_step_count % steps_per_record == 0:
-            core.utils.update_stage_result(dataloader,loss_func)
+            core.utils.update_stage_result(dataloader,loss_func.result())
             loss_func.log(writer,training_data_count)
             writer.add_scaler('learning_rate',lr,training_data_count)
     
@@ -100,7 +100,7 @@ for _ in range(training_epochs):
                 output = model(batch_data['image'])
                 hybrid_loss = loss_func(output,batch_data,training_progression)
         
-        core.utils.update_stage_result(dataloader,loss_func)
+        core.utils.update_stage_result(dataloader,loss_func.result())
         
         output = model.inference(output)
         core.utils.record_inference(Config,training_epoch_count,stage,batch_data,output)
