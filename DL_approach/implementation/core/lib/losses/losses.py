@@ -45,7 +45,6 @@ class BaseLoss:
     
     def __call__(self,p,y):
         loss = self.call(p[self.name],y[self.name])
-        print(self.__class__.__name__,self.name,loss,sep=',')
         return loss
     
     def call(self,p,y):
@@ -156,9 +155,6 @@ class ConfidenceFocalLoss(BaseLoss):
     
     def pr_curve(self):
         output = {}
-        print(self.record['p'].shape)
-        print(self.record['y'].shape)
-        
         if self.subclass is not None:
             for i,t in enumerate(self.subclass):
                 p = self.record['p'][:,i] if self.record['p'] is not None else None

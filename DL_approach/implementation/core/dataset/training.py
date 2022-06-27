@@ -32,7 +32,6 @@ class DataReader:
         coco_dummy = self.random_state.sample(self.coco_dummy,k=coco_dummy_count)
         
         self.dataset = self.golfer + coco_human + coco_dummy
-        print(len(self.golfer), len(coco_human), len(coco_dummy))
         return self
         
     def __len__(self):
