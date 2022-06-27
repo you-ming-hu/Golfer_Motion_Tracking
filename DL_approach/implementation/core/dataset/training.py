@@ -14,8 +14,6 @@ import core.lib.schedules.data_schedules as data_schedules
 
 
 import warnings
-warnings.filterwarnings("error", category=RuntimeWarning)
-
 
 human_keypoints_count = len(common.human_keypoints)
 golfclub_keypoints_count = len(common.golfclub_keypoints)
@@ -539,10 +537,12 @@ class DataAugProcessor(DataProcessorBase):
                     x_a = head_random_shift[0]
                     x_b = x_a + x_a/abs(x_a)*abs(vector[0])*clubhead_ratio
                     y_a = head_random_shift[1]
+                    warnings.filterwarnings("error", category=RuntimeWarning)
                     try:
                         y_b = y_a + y_a/abs(y_a)*abs(vector[1])*clubhead_ratio
                     except:
                         raise RuntimeWarning(f'{y_a:=?},{vector[1]:=?},{clubhead_ratio:=?}')
+                    warnings.resetwarnings()
                     #x outside shift
                     if bool(np.random.binomial(1,p=0.5)):
                         random_x_shift = np.random.uniform(*sorted([x_a,x_b]))
