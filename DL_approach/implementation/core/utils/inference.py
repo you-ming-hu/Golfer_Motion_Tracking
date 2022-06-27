@@ -1,42 +1,63 @@
-import matplotlib.pyplot as plt
-import pathlib
+import core.dataset.common
 import numpy as np
+import matplotlib.pyplot as plt
+import cv2
 
+def visualize(
+    save_path,
+    vis_prob,
+    cf_threshold,
+    image,
+    multi_people_heatmap, leading_role_heatmap, golfclub_heatmap,
+    leading_role_keypoints_xy, leading_role_keypoints_cf,
+    golfclub_keypoints_xy, golfclub_keypoints_cf,
+    leading_role_bbox_xywh,leading_role_bbox_cf):
+    if bool(np.random.binomial(1,p=vis_prob)):
+        image_shape = image.shape[:2][::-1]
+        
+        image = image.copy()
+        
+        plt.figure(figsize=(30,20))
+        plt.subplot(2,2,1)
+        
+        plt.title('multi_people_heatmap',fontsize=50)
+        plt.imshow(image)
+        plt.imshow(cv2.resize(multi_people_heatmap.max(axis=-1),image_shape),alpha=0.5)
+        plt.axis(False)
 
-def SegWithClass(save_root_path,batch_data,output):
-    batch_size = batch_data['image'].shape[0]
-    batch_data['mask'] = batch_data['mask'].cpu().numpy()
-    batch_data['contrast_exist'] = batch_data['contrast_exist'].cpu().numpy()
-    batch_data['image'] = batch_data['image'].cpu().numpy()
-    
-    for i in range(batch_size):
-        mask = batch_data['mask'][i]
-        contrast_exist = batch_data['contrast_exist'][i]
-        curr_img = batch_data['image'][i][0]
-        prev_img = batch_data['image'][i][1]
+        plt.subplot(2,2,2)
+        plt.title('leading_role_heatmap',fontsize=50)
+        plt.imshow(image)
+        plt.imshow(cv2.resize(leading_role_heatmap.max(axis=-1),image_shape),alpha=0.5)
+        plt.axis(False)
         
-        contrast_exist = batch_data['contrast_exist'][i]
-        sample_id = batch_data['sample_id'][i]
-        frame_id = batch_data['frame_id'][i]
+        plt.subplot(2,2,3)
+        plt.title('golfclub_heatmap',fontsize=50)
+        plt.imshow(image)
+        plt.imshow(cv2.resize(golfclub_heatmap.max(axis=-1),image_shape),alpha=0.5)
+        plt.axis(False)
+
+        for i in range(len(core.dataset.common.human_keypoints)):
+            if leading_role_keypoints_cf[i] > cf_threshold:
+                xy = leading_role_keypoints_xy[i]
+                cv2.circle(image,xy,5,(1,0,0),2)
+
+        for i in range(len(core.dataset.common.golfclub_keypoints)):
+            if golfclub_keypoints_cf[i] > cf_threshold:
+                xy = golfclub_keypoints_xy[i]
+                cv2.circle(image,xy,5,(0,0,1),2)
+                
+        if leading_role_bbox_cf > cf_threshold:
+            xywh = leading_role_bbox_xywh
+            cv2.rectangle(image,xywh[:2],xywh[:2]+xywh[2:],(1,0,0),2)
         
-        pred_mask = output['mask'][i]
-        pred_contrast_exist =  output['contrast_exist'][i]
+        plt.subplot(2,2,4)
+        plt.title('keypoints',fontsize=50)
+        plt.imshow(image)
+        plt.axis(False)
         
-        if contrast_exist == 1:
-            need_save = bool(np.random.binomial(1,0.33))
-        else:
-            need_save = bool(np.random.binomial(1,0.1))
-            
-        if need_save:
-            save_path = pathlib.Path(save_root_path,sample_id,frame_id)
-            save_path.mkdir(parents=True,exist_ok=True)
-            
-            plt.imsave(save_path.joinpath(f'prev.png'),prev_img,cmap='gray')
-            plt.imsave(save_path.joinpath(f'curr.png'),curr_img,cmap='gray')
-            plt.imsave(save_path.joinpath(f'mask_{int(contrast_exist):d}.png'),mask,cmap='gray')
-            
-            plt.imsave(save_path.joinpath(f'pred_{pred_contrast_exist:.4f}.png'),pred_mask,cmap='gray')
+        plt.tight_layout()
         
-        
-        
-        
+        image_count = len(save_path.iterdir())
+        plt.savefig(save_path.joinpath(f'{image_count:0>5}').with_suffix('.jpg').as_posix(),bbox_inches='tight')
+        plt.show()
