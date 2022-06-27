@@ -541,7 +541,7 @@ class DataAugProcessor(DataProcessorBase):
                     try:
                         y_b = y_a + y_a/abs(y_a)*abs(vector[1])*clubhead_ratio
                     except:
-                        raise RuntimeWarning(f'{y_a:=?},{vector[1]:=?},{clubhead_ratio:=?}')
+                        raise RuntimeWarning(f'{y_a:=},{vector[1]:=},{clubhead_ratio:=}')
                     warnings.resetwarnings()
                     #x outside shift
                     if bool(np.random.binomial(1,p=0.5)):
