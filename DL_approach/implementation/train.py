@@ -103,7 +103,7 @@ for _ in range(training_epochs):
         core.utils.update_stage_result(dataloader,loss_func.result())
         
         output = model.inference(output)
-        core.utils.record_inference(Config,training_epoch_count,stage,batch_data,output)
+        core.utils.record_inference(Config,training_epoch_count,batch_data['image'],output)
     
     lr_scheduler.epoch(training_epoch_count,loss_func.losses)
     loss_func.log(writer,training_data_count)
