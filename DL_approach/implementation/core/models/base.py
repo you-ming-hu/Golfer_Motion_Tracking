@@ -11,7 +11,7 @@ target_count = human_keypoints_count*3 + golfclub_keypoints_count*3 + 5
 
 class DetectionHead(torch.nn.Sequential):
     def __init__(self,in_channel,kernels):
-        r = (target_count*2/in_channel)**(len(kernels))
+        r = (target_count*2/in_channel)**(1/len(kernels))
         in_channels = [round(in_channel*(r)**i) for i in range(len(kernels))]
         
         mods = []
