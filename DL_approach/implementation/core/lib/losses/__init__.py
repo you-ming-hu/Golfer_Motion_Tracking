@@ -1,4 +1,4 @@
-from .losses import BaseLoss, HeatmapUnifiedFocalLoss, KeypointsBCE, ConfidenceFocalLoss, BBoxGIOU
+from .losses import BaseLoss, HeatmapUnifiedFocalLoss, KeypointsRMSE, ConfidenceFocalLoss, BBoxGIOU
 
 class HybridLoss:
     def __init__(
@@ -16,9 +16,9 @@ class HybridLoss:
         self.multi_human_heatmap = HeatmapUnifiedFocalLoss('multi_people_heatmap',**multi_human_heatmap_param)
         self.leading_role_heatmap = HeatmapUnifiedFocalLoss('leading_role_heatmap',**leading_role_heatmap_param)
         self.golfclub_heatmap = HeatmapUnifiedFocalLoss('golfclub_heatmap',**golfclub_heatmap_param)
-        self.leading_role_keypoints = KeypointsBCE('leading_role_keypoints',**leading_role_keypoints_param)
+        self.leading_role_keypoints = KeypointsRMSE('leading_role_keypoints',**leading_role_keypoints_param)
         self.leading_role_keypoints_cf = ConfidenceFocalLoss('leading_role_keypoints',**leading_role_keypoints_cf_param)
-        self.golfclub_keypoints = KeypointsBCE('golfclub_keypoints',**golfclub_keypoints_param)
+        self.golfclub_keypoints = KeypointsRMSE('golfclub_keypoints',**golfclub_keypoints_param)
         self.golfclub_keypoints_cf = ConfidenceFocalLoss('golfclub_keypoints',**golfclub_keypoints_cf_param)
         self.leading_role_bbox = BBoxGIOU('leading_role_bbox',**leading_role_bbox_param)
         self.leading_role_bbox_cf = ConfidenceFocalLoss('leading_role_bbox',**leading_role_bbox_cf_param)

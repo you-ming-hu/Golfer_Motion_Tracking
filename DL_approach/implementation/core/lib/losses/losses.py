@@ -180,10 +180,10 @@ class ConfidenceFocalLoss(BaseLoss):
         loss = torch.sum(focal,axis=1) #(B,C)
         return loss
 
-class KeypointsBCE(BaseLoss):
-    def __init__(self,name,shcedule):
+class KeypointsRMSE(BaseLoss):
+    def __init__(self,name,shcedule,tolerance):
         subclass = {'leading_role_keypoints':common.human_keypoints,'golfclub_keypoints':common.golfclub_keypoints}[name]
-        super().__init__(name,shcedule,subclass)
+        super().__init__(name,shcedule,subclass,tolerance=tolerance)
         
     def call(self,p,y):
         flag = y['flag']
@@ -198,8 +198,8 @@ class KeypointsBCE(BaseLoss):
             y = y[flag!=0]
             cf = cf[flag!=0]
             
-            losses = torch.nn.functional.binary_cross_entropy_with_logits(p,y,reduction='none') #(B,C,(x,y))
-            losses = torch.sum(losses,axis=2) #(B,C)
+            losses = torch.sqrt(torch.sum((p-y)**2,axis=2)) #(B,C)
+            losses = torch.maximum(losses-self.tolerance,torch.tensor(0))
             
             losses = losses * cf
             
