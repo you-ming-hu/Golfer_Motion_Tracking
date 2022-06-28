@@ -27,7 +27,7 @@ class BaseModel(torch.nn.Module):
     
     def initialize(self):
         self.heatmap_head = torch.nn.Conv2d(self.decoder.out_channels[-1], heatmap_count, kernel_size=1)
-        self.detection_head = DetectionHead(self.encoder.out_channels[-1],[(4,3),(4,3),(4,2),(4,2),(4,3)])
+        self.detection_head = DetectionHead(self.encoder.out_channels[-1],[(3,4),(3,4),(2,4),(2,4),(3,4)])
         
         init.initialize_decoder(self.decoder)
         init.initialize_head(self.heatmap_head)
