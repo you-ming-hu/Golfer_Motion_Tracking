@@ -12,14 +12,14 @@ target_count = human_keypoints_count*3 + golfclub_keypoints_count*3 + 5
 class DetectionHead(torch.nn.Sequential):
     def __init__(self,in_channel,kernels):
         r = (target_count*2/in_channel)**(1/len(kernels))
-        in_channels = [round(in_channel*(r)**i) for i in range(len(kernels))]
+        channels = [round(in_channel*(r)**i) for i in range(len(kernels)+1)]
         
         mods = []
-        for c,k in zip(in_channels,kernels):
-            mods.append(torch.nn.Conv2d(c,round(c*r),k))
+        for i,k in enumerate(kernels):
+            mods.append(torch.nn.Conv2d(channels[i],channels[i+1],k))
             mods.append(torch.nn.Mish())
         mods.append(torch.nn.Flatten())
-        mods.append(torch.nn.Linear(round(in_channels[-1]*r), target_count, bias=False))
+        mods.append(torch.nn.Linear(channels[-1], target_count, bias=False))
         super().__init__(*mods)
 
 
