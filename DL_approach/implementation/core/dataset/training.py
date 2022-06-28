@@ -980,8 +980,8 @@ class Dataset(torch.utils.data.Dataset):
         return len(self.dataset)
     
     def __call__(self,epoch_count=None):
-        golfer_coco_ratio = self.golfer_coco_ratio if isinstance(self.golfer_coco_ratio,(int,float)) else self.golfer_coco_ratio(epoch_count)
-        dummy_ratio = self.dummy_ratio if isinstance(self.dummy_ratio,(int,float)) else self.dummy_ratio(epoch_count)
+        golfer_coco_ratio = self.golfer_coco_ratio if isinstance(self.golfer_coco_ratio,(int,float,type(None))) else self.golfer_coco_ratio(epoch_count)
+        dummy_ratio = self.dummy_ratio if isinstance(self.dummy_ratio,(int,float,type(None))) else self.dummy_ratio(epoch_count)
         self.dataset = self.reader(golfer_coco_ratio,dummy_ratio)
         return self
     
