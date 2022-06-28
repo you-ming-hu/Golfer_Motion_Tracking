@@ -30,7 +30,7 @@ class DataReader:
         else:
             golfer_count = len(self.golfer)
             coco_count = int(golfer_count/golfer_coco_ratio)
-            coco_dummy_count = int(coco_count*dummy_ratio)
+            coco_dummy_count = int(coco_count*dummy_ratio) if dummy_ratio is not None else 0
             coco_human_count = coco_count-coco_dummy_count
             
             if coco_human_count >= len(self.coco_human):
@@ -970,8 +970,8 @@ class Dataset(torch.utils.data.Dataset):
         super().__init__()
         self.reader = reader
         self.processor = processor
-        self.golfer_coco_ratio = golfer_coco_ratio if isinstance(golfer_coco_ratio,(int,float)) else eval(f'data_schedules.{golfer_coco_ratio}')
-        self.dummy_ratio = dummy_ratio if isinstance(dummy_ratio,(int,float)) else eval(f'data_schedules.{dummy_ratio}')
+        self.golfer_coco_ratio = golfer_coco_ratio if isinstance(golfer_coco_ratio,(int,float,type(None))) else eval(f'data_schedules.{golfer_coco_ratio}')
+        self.dummy_ratio = dummy_ratio if isinstance(dummy_ratio,(int,float,type(None))) else eval(f'data_schedules.{dummy_ratio}')
         
     def __getitem__(self,index):
         return self.processor(self.dataset[index])
