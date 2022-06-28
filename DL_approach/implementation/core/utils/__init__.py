@@ -70,6 +70,7 @@ def get_lr_scheduler(optimizer,Config):
 def save_config(Config):
     save_root = pathlib.Path(Config.Record.RootPath)
     save_root.mkdir(parents=True,exist_ok=True)
+    save_root.joinpath('config.txt').write_text(str(Config))
     pickle.dump(Config,save_root.joinpath('config.pkl').open('wb'))
     SummaryWriter(save_root.joinpath('record','config').as_posix()).add_text('Config',str(Config),0)
 
