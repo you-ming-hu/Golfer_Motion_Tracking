@@ -9,15 +9,25 @@ golfclub_keypoints_count = len(common.golfclub_keypoints)
 heatmap_count = human_keypoints_count*2 + golfclub_keypoints_count
 target_count = human_keypoints_count*3 + golfclub_keypoints_count*3 + 5
 
+class DetectionHead(torch.nn.Sequential):
+    def __init__(self,in_channel,kernels):
+        r = (target_count*2/in_channel)**(len(kernels))
+        in_channels = [round(in_channel*(r)**i) for i in range(len(kernels))]
+        
+        mods = []
+        for c,k in zip(in_channels,kernels):
+            mods.append(torch.nn.Conv2d(c,round(c*r),k))
+            mods.append(torch.nn.Mish())
+        mods.append(torch.nn.Flatten())
+        mods.append(torch.nn.Linear(round(in_channels[-1]*r), target_count, bias=False))
+        super().__init__(*mods)
+
+
 class BaseModel(torch.nn.Module):
     
     def initialize(self):
         self.heatmap_head = torch.nn.Conv2d(self.decoder.out_channels[-1], heatmap_count, kernel_size=1)
-        self.detection_head = torch.nn.Sequential(
-            torch.nn.AdaptiveAvgPool2d(1),
-            torch.nn.Flatten(),
-            torch.nn.Dropout(p=0.2, inplace=True),
-            torch.nn.Linear(self.encoder.out_channels[-1], target_count, bias=False))
+        self.detection_head = DetectionHead(self.encoder.out_channels[-1],[(4,3),(4,3),(4,2),(4,2),(4,3)])
         
         init.initialize_decoder(self.decoder)
         init.initialize_head(self.heatmap_head)
