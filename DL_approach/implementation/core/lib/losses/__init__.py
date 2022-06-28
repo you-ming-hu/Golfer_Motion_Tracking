@@ -61,16 +61,18 @@ class HybridLoss:
         
         for _,l in self.__dict__.items():
             if isinstance(l,BaseLoss):
-                loss = l(p,y)
-                if loss is not None:
-                    schedule = l.schedule if isinstance(l.schedule,(int,float)) else l.schedule(progression)
-                    hybrid_loss = hybrid_loss + loss * schedule
-                    count += 1
-                    self.update_state(str(l),loss * schedule)
+                if l.schedule != 0:
+                    loss = l(p,y)
+                    if loss is not None:
+                        schedule = l.schedule if isinstance(l.schedule,(int,float)) else l.schedule(progression)
+                        hybrid_loss = hybrid_loss + loss * schedule
+                        count += 1
+                        self.update_state(str(l),loss * schedule)
         
         if count == 0:
             hybrid_loss =  None
         else:
+            hybrid_loss = hybrid_loss / count
             self.update_state('hybrid_loss',hybrid_loss)
             
         return hybrid_loss

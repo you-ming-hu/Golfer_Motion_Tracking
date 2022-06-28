@@ -23,22 +23,27 @@ class DataReader:
         self.random_state.setstate(random.getstate())
         
     def __call__(self,golfer_coco_ratio,dummy_ratio):
-        golfer_count = len(self.golfer)
-        coco_count = int(golfer_count/golfer_coco_ratio)
-        coco_dummy_count = int(coco_count*dummy_ratio)
-        coco_human_count = coco_count-coco_dummy_count
-        
-        if coco_human_count >= len(self.coco_human):
-            coco_human = self.coco_human
+        if golfer_coco_ratio == 0:
+            self.dataset = self.coco_human + self.coco_dummy
+        elif golfer_coco_ratio is None:
+            self.dataset = self.golfer
         else:
-            coco_human = self.random_state.sample(self.coco_human,k=coco_human_count)
+            golfer_count = len(self.golfer)
+            coco_count = int(golfer_count/golfer_coco_ratio)
+            coco_dummy_count = int(coco_count*dummy_ratio)
+            coco_human_count = coco_count-coco_dummy_count
+            
+            if coco_human_count >= len(self.coco_human):
+                coco_human = self.coco_human
+            else:
+                coco_human = self.random_state.sample(self.coco_human,k=coco_human_count)
 
-        if coco_dummy_count >= len(self.coco_dummy):
-            coco_dummy = self.coco_dummy
-        else:
-            coco_dummy = self.random_state.sample(self.coco_dummy,k=coco_dummy_count)
-        
-        self.dataset = self.golfer + coco_human + coco_dummy
+            if coco_dummy_count >= len(self.coco_dummy):
+                coco_dummy = self.coco_dummy
+            else:
+                coco_dummy = self.random_state.sample(self.coco_dummy,k=coco_dummy_count)
+            
+            self.dataset = self.golfer + coco_human + coco_dummy
         return self
         
     def __len__(self):
@@ -231,8 +236,8 @@ class DataAugProcessor(DataProcessorBase):
             if new_h > t_h * h_full:
                 new_h = int(t_h*np.random.uniform(*h_full_range))
                 new_w = int(new_h*new_aspect)
-        new_x = np.random.randint(0,t_w-new_w)
-        new_y = np.random.randint(0,t_h-new_h)
+        new_x = np.random.randint(0,max(1,t_w-new_w))
+        new_y = np.random.randint(0,max(1,t_h-new_h))
         src = np.array([[x,y],[x+w,y],[x,y+h]])
         dst = np.array([[new_x,new_y],[new_x+new_w,new_y],[new_x,new_y+new_h]])
         trans = cv2.getAffineTransform(np.float32(src),np.float32(dst))
