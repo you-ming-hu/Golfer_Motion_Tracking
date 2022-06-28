@@ -11,3 +11,4 @@ DL_approach/human-pose-estimation/GolferPrediction/
 *.jpg
 DL_approach/prototype/human-pose-estimation/coco/
 DL_approach/implementation/logging/
+DL_approach/implementation/loggings/
