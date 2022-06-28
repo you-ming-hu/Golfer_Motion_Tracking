@@ -281,7 +281,7 @@ class DataAugProcessor(DataProcessorBase):
         golfclub_keypoints_xy = np.zeros((golfclub_keypoints_count,2),dtype=np.float32)
         golfclub_keypoints_cf = np.zeros(golfclub_keypoints_count,dtype=np.float32)
         #create leading_role_bbox_xywh, leading_role_bbox_cf
-        leading_role_bbox_xywh = (np.array([new_x, new_y, new_w, new_h]) / np.array([t_w, t_h, t_w, t_h])).astype(np.float32)
+        leading_role_bbox_xywh = (np.array([new_x+new_w/2, new_y+new_h/2, new_w, new_h]) / np.array([t_w, t_h, t_w, t_h])).astype(np.float32)
         leading_role_bbox_cf = np.float32(1)
         
         #postprocess : ToFloat, Normalize, ToTensor
@@ -737,7 +737,7 @@ class DataNonAugProcessor(DataProcessorBase):
         golfclub_keypoints_xy = np.zeros((golfclub_keypoints_count,2),dtype=np.float32)
         golfclub_keypoints_cf = np.zeros(golfclub_keypoints_count,dtype=np.float32)
         #create leading_role_bbox_xywh, leading_role_bbox_cf
-        leading_role_bbox_xywh = (np.array([new_x, new_y, new_w, new_h]) / np.array([t_w, t_h, t_w, t_h])).astype(np.float32)
+        leading_role_bbox_xywh = (np.array([new_x+new_w/2, new_y+new_h/2, new_w, new_h]) / np.array([t_w, t_h, t_w, t_h])).astype(np.float32)
         leading_role_bbox_cf = np.float32(1)
         
         #postprocess : ToFloat, Normalize, ToTensor

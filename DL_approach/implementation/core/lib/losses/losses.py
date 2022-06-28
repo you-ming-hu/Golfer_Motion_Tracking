@@ -249,8 +249,8 @@ class BBoxGIOU(BaseLoss):
         p_area = p[:,2] * p[:,3]
         y_area = y[:,2] * y[:,3]
 
-        p_coor = torch.concat([p[:, :2], p[:,:2] + p[:,2:]],axis=1) #(B,(x1,y1,x2,y2))
-        y_coor = torch.concat([y[:, :2], y[:,:2] + y[:,2:]],axis=1)
+        p_coor = torch.concat([p[:,:2]-p[:,2:]/2, p[:,:2]+p[:,2:]/2],axis=1) #(B,(x1,y1,x2,y2))
+        y_coor = torch.concat([y[:,:2]-y[:,2:]/2, y[:,:2]+y[:,2:]/2],axis=1)
         
         left_up = torch.maximum(p_coor[:,:2], y_coor[:,:2])
         right_down = torch.minimum(p_coor[:,2:], y_coor[:,2:])
@@ -275,8 +275,3 @@ class BBoxGIOU(BaseLoss):
         loss = iou - giou
         loss = 1 - loss #(B)
         return loss
-    
-    
-
-    
-

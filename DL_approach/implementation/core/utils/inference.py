@@ -49,7 +49,9 @@ def visualize(
                 
         if leading_role_bbox_cf > cf_threshold:
             xywh = leading_role_bbox_xywh
-            cv2.rectangle(image,xywh[:2],xywh[:2]+xywh[2:],(1,0,0),2)
+            lt = (xywh[:2]-xywh[2:]/2).astype(int)
+            rb = (xywh[:2]+xywh[2:]/2).astype(int)
+            cv2.rectangle(image,lt,rb,(1,0,0),2)
         
         plt.subplot(2,2,4)
         plt.title('keypoints',fontsize=50)
