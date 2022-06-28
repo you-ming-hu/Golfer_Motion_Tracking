@@ -48,7 +48,7 @@ torch.manual_seed(Config.AutoGenerate.RandomSeed.DatasetShuffle)
 for _ in range(training_epochs):
     #training
     stage = stages[0]
-    print('='*50,stage,'='*50)
+    print('='*50,f'Epoch: {training_epoch_count} {stage}','='*50)
     dataloader = dataloaders[stage](training_epoch_count)
     progression_per_step = 1 / len(dataloader)
     writer = writers[stage]
@@ -87,7 +87,7 @@ for _ in range(training_epochs):
                 
     #validation
     stage = stages[1]
-    print('='*50,stage,'='*50)
+    print('='*50,f'Epoch: {training_epoch_count} {stage}','='*50)
     dataloader = dataloaders[stage](training_epoch_count)
     writer = writers[stage]
     
