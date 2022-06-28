@@ -24,7 +24,16 @@ class DataReader:
         
     def __call__(self,golfer_coco_ratio,dummy_ratio):
         if golfer_coco_ratio == 0:
-            self.dataset = self.coco_human + self.coco_dummy
+            coco_human_count = len(self.coco_human)
+            if dummy_ratio < 1:
+                coco_dummy_count = int(dummy_ratio/(1-dummy_ratio) * coco_human_count)
+                if coco_dummy_count >= len(self.coco_dummy):
+                    coco_dummy = self.coco_dummy
+                else:
+                    coco_dummy = self.random_state.sample(self.coco_dummy,k=coco_dummy_count)
+                self.dataset = self.coco_human + coco_dummy
+            else:
+                self.dataset = self.coco_dummy
         elif golfer_coco_ratio is None:
             self.dataset = self.golfer
         else:
