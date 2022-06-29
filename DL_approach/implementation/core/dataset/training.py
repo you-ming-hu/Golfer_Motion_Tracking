@@ -22,37 +22,21 @@ class DataReader:
         self.random_state = random.Random()
         self.random_state.setstate(random.getstate())
         
-    def __call__(self,golfer_coco_ratio,dummy_ratio):
-        if golfer_coco_ratio == 0:
-            coco_human_count = len(self.coco_human)
-            if dummy_ratio < 1:
-                coco_dummy_count = int(dummy_ratio/(1-dummy_ratio) * coco_human_count)
-                if coco_dummy_count >= len(self.coco_dummy):
-                    coco_dummy = self.coco_dummy
-                else:
-                    coco_dummy = self.random_state.sample(self.coco_dummy,k=coco_dummy_count)
-                self.dataset = self.coco_human + coco_dummy
+    def select(self,dataset,count):
+        if count < len(dataset):
+            if count == 0:
+                select_dataset = []
             else:
-                self.dataset = self.coco_dummy
-        elif golfer_coco_ratio is None:
-            self.dataset = self.golfer
+                select_dataset = self.random_state.sample(dataset,k=count)
         else:
-            golfer_count = len(self.golfer)
-            coco_count = int(golfer_count/golfer_coco_ratio)
-            coco_dummy_count = int(coco_count*dummy_ratio) if dummy_ratio is not None else 0
-            coco_human_count = coco_count-coco_dummy_count
-            
-            if coco_human_count >= len(self.coco_human):
-                coco_human = self.coco_human
-            else:
-                coco_human = self.random_state.sample(self.coco_human,k=coco_human_count)
-
-            if coco_dummy_count >= len(self.coco_dummy):
-                coco_dummy = self.coco_dummy
-            else:
-                coco_dummy = self.random_state.sample(self.coco_dummy,k=coco_dummy_count)
-            
-            self.dataset = self.golfer + coco_human + coco_dummy
+            select_dataset = dataset
+        return select_dataset
+        
+    def __call__(self,golfer_count,coco_human_count,coco_dummy_count):
+        golfer_dataset = self.select(self.golfer,golfer_count)
+        coco_human_dataset = self.select(self.coco_human,coco_human_count)
+        coco_dummy_dataset = self.select(self.coco_dummy,coco_dummy_count)
+        self.dataset = golfer_dataset + coco_human_dataset + coco_dummy_dataset
         return self
         
     def __len__(self):
@@ -975,12 +959,14 @@ class DataNonAugProcessor(DataProcessorBase):
             }
         
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self,reader,processor,golfer_coco_ratio,dummy_ratio):
+    def __init__(self,reader,processor,base_count,golfer_schedule,coco_human_shcedule,coco_dummy_schedule):
         super().__init__()
         self.reader = reader
         self.processor = processor
-        self.golfer_coco_ratio = golfer_coco_ratio if isinstance(golfer_coco_ratio,(int,float,type(None))) else eval(f'data_schedules.{golfer_coco_ratio}')
-        self.dummy_ratio = dummy_ratio if isinstance(dummy_ratio,(int,float,type(None))) else eval(f'data_schedules.{dummy_ratio}')
+        self.base_count = base_count
+        self.golfer_schedule = golfer_schedule if isinstance(golfer_schedule,(int,float)) else eval(f'data_schedules.{golfer_schedule}')
+        self.coco_human_shcedule = coco_human_shcedule if isinstance(coco_human_shcedule,(int,float)) else eval(f'data_schedules.{coco_human_shcedule}')
+        self.coco_dummy_schedule = coco_dummy_schedule if isinstance(coco_dummy_schedule,(int,float)) else eval(f'data_schedules.{coco_dummy_schedule}')
         
     def __getitem__(self,index):
         return self.processor(self.dataset[index])
@@ -989,9 +975,13 @@ class Dataset(torch.utils.data.Dataset):
         return len(self.dataset)
     
     def __call__(self,epoch_count=None):
-        golfer_coco_ratio = self.golfer_coco_ratio if isinstance(self.golfer_coco_ratio,(int,float,type(None))) else self.golfer_coco_ratio(epoch_count)
-        dummy_ratio = self.dummy_ratio if isinstance(self.dummy_ratio,(int,float,type(None))) else self.dummy_ratio(epoch_count)
-        self.dataset = self.reader(golfer_coco_ratio,dummy_ratio)
+        golfer_count = self.golfer_schedule if isinstance(self.golfer_schedule,(int,float)) else self.golfer_schedule(epoch_count)
+        golfer_count = int(golfer_count * self.base_count)
+        coco_human_count = self.coco_human_shcedule if isinstance(self.coco_human_shcedule,(int,float)) else self.coco_human_shcedule(epoch_count)
+        coco_human_count = int(coco_human_count * self.base_count)
+        coco_dummy_count = self.coco_dummy_schedule if isinstance(self.coco_dummy_schedule,(int,float)) else self.coco_dummy_schedule(epoch_count)
+        coco_dummy_count = int(coco_dummy_count * self.base_count)
+        self.dataset = self.reader(golfer_count,coco_human_count,coco_dummy_count)
         return self
     
 class DataLoader:
