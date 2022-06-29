@@ -285,6 +285,7 @@ class KeypointsPsuedoBBox(BaseLoss):
     def giou_loss(self,p,y):
         image_size = torch.tensor(common.uniform_input_image_size, dtype = torch.float32)
         bbox_size = torch.tensor([self.bbox_size,self.bbox_size], dtype = torch.float32)/image_size
+        bbox_size = bbox_size.to(y.device)
         bbox_size = bbox_size[None,None,:] #(B,C,(w,h))
         
         p_area = bbox_size[...,0] * bbox_size[...,1]
