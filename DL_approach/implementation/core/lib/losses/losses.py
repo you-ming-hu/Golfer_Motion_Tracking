@@ -80,6 +80,7 @@ class HeatmapMSE(BaseLoss):
             self.update_state(acc_loss,acc_count)
             
         return loss
+
 # class HeatmapUnifiedFocalLoss(BaseLoss):
 #     def __init__(self,name,shcedule,weight,delta,gamma):
 #         subclass = {'multi_people_heatmap':common.human_keypoints,'leading_role_heatmap':common.human_keypoints,'golfclub_heatmap':common.golfclub_keypoints}[name]
@@ -210,10 +211,45 @@ class ConfidenceFocalLoss(BaseLoss):
         loss = torch.sum(focal,axis=1) #(B,C)
         return loss
 
-class KeypointsRMSE(BaseLoss):
-    def __init__(self,name,shcedule,tolerance):
+# class KeypointsRMSE(BaseLoss):
+#     def __init__(self,name,shcedule,tolerance):
+#         subclass = {'leading_role_keypoints':common.human_keypoints,'golfclub_keypoints':common.golfclub_keypoints}[name]
+#         super().__init__(name,shcedule,subclass,tolerance=tolerance)
+        
+#     def call(self,p,y):
+#         flag = y['flag']
+#         cf = y['cf']
+#         y = y['xy']
+#         p = p['xy']
+        
+#         if torch.sum(flag) == 0:
+#             loss = None
+#         else:
+#             p = p[flag!=0]
+#             y = y[flag!=0]
+#             cf = cf[flag!=0]
+            
+#             p = torch.sigmoid(p)
+#             losses = torch.sqrt(torch.sum((p-y)**2,axis=2)) #(B,C)
+#             losses = torch.maximum(losses-self.tolerance,torch.tensor(0))
+            
+#             losses = losses * cf
+            
+#             acc_loss = torch.sum(losses,axis=0)
+#             acc_count = torch.sum(cf,axis=0)
+            
+#             total_loss = torch.sum(acc_loss)
+#             total_count = torch.sum(acc_count)
+            
+#             loss = total_loss/total_count if total_count!=0 else None
+            
+#             self.update_state(acc_loss,acc_count)
+#         return loss
+
+class KeypointsPsuedoBBox(BaseLoss):
+    def __init__(self,name,shcedule,bbox_size):
         subclass = {'leading_role_keypoints':common.human_keypoints,'golfclub_keypoints':common.golfclub_keypoints}[name]
-        super().__init__(name,shcedule,subclass,tolerance=tolerance)
+        super().__init__(name,shcedule,subclass,bbox_size=bbox_size)
         
     def call(self,p,y):
         flag = y['flag']
@@ -229,8 +265,8 @@ class KeypointsRMSE(BaseLoss):
             cf = cf[flag!=0]
             
             p = torch.sigmoid(p)
-            losses = torch.sqrt(torch.sum((p-y)**2,axis=2)) #(B,C)
-            losses = torch.maximum(losses-self.tolerance,torch.tensor(0))
+            
+            losses = self.giou_loss(p,y)
             
             losses = losses * cf
             
@@ -244,6 +280,44 @@ class KeypointsRMSE(BaseLoss):
             
             self.update_state(acc_loss,acc_count)
         return loss
+    
+    def giou_loss(self,p,y):
+        image_size = torch.tensor(common.uniform_input_image_size, dtype = torch.float32)
+        bbox_size = torch.tensor([self.bbox_size,self.bbox_size], dtype = torch.float32)/image_size
+        bbox_size = bbox_size[None,None,:] #(B,C,(w,h))
+        
+        p_area = bbox_size[0] * bbox_size[1]
+        y_area = bbox_size[0] * bbox_size[1]
+        
+        p_coor = torch.concat([p-bbox_size/2,p+bbox_size/2],axis=2)
+        y_coor = torch.concat([y-bbox_size/2,y+bbox_size/2],axis=2)
+        
+        left_up = torch.maximum(p_coor[...,:2], y_coor[...,:2])
+        right_down = torch.minimum(p_coor[...,2:], y_coor[...,2:])
+
+        inter_section = torch.maximum(right_down - left_up, torch.tensor(0,dtype=torch.float32))
+        inter_area = inter_section[..., 0] * inter_section[..., 1]
+        
+        union_area = p_area + y_area - inter_area
+
+        iou = inter_area / union_area
+        iou[union_area==0] = 0
+
+        enclose_left_up = torch.minimum(p_coor[...,:2], y_coor[...,:2])
+        enclose_right_down = torch.maximum(p_coor[...,2:], y_coor[...,2:])
+
+        enclose_section = enclose_right_down - enclose_left_up
+        enclose_area = enclose_section[...,0] * enclose_section[...,1]
+        
+        giou = (enclose_area-union_area) / enclose_area
+        giou[enclose_area==0] = 0
+        
+        loss = iou - giou
+        loss = 1 - loss #(B,C)
+        return loss
+
+
+
     
 class BBoxGIOU(BaseLoss):
     def __init__(self,name,shcedule):
