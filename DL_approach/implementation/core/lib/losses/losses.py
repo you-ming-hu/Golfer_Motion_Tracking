@@ -70,6 +70,8 @@ class HeatmapMSE(BaseLoss):
             losses = torch.nn.functional.mse_loss(p,y,reduction='none')
             losses = torch.mean(losses,dim=[2,3])
             
+            print(losses.mean())
+            
             acc_loss = torch.sum(losses,axis=0)
             acc_count = torch.full_like(acc_loss,torch.sum(flag),dtype=torch.float32)
             
