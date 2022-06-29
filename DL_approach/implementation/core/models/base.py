@@ -85,6 +85,7 @@ class BaseModel(torch.nn.Module):
         if self.training:
             self.eval()
         heatmap, detection = self.intermeidate_forward(x)
+        assert False,'sigmoid?'
         heatmap = torch.sigmoid(heatmap)
         detection = torch.sigmoid(detection)
         output = self.foramt_ouuput(heatmap, detection)
@@ -92,5 +93,7 @@ class BaseModel(torch.nn.Module):
     
     @torch.no_grad()
     def inference(self,output):
-        return {s:torch.sigmoid(t) if not isinstance(t,dict) else {u:torch.sigmoid(v) for u,v in t.items()} for s,t in output.items()}
+        # sigmoid_keys = ['leading_role_keypoints','golfclub_keypoints','leading_role_bbox']
+        return output
+        # return {s:torch.sigmoid(t) if not isinstance(t,dict) else {u:torch.sigmoid(v) for u,v in t.items()} for s,t in output.items()}
 

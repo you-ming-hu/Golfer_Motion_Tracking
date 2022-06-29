@@ -65,7 +65,7 @@ class HeatmapMSE(BaseLoss):
             p = p[flag!=0] #(B,C,H,W)
             y = y[flag!=0]
             
-            p = torch.sigmoid(p)
+            # p = torch.sigmoid(p)
             
             losses = torch.nn.functional.mse_loss(p,y,reduction='none')
             losses = torch.mean(losses,dim=[2,3])
