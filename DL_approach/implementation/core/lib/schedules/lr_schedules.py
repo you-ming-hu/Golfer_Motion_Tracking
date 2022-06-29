@@ -37,3 +37,14 @@ class LinearWarmupExpReduce(BaseScheduler):
     
     def get_epoch_lr(self,epoch,losses):
         return None
+    
+class Constant(BaseScheduler):
+    def __init__(self, value):
+        self.value = value
+        
+    def get_step_lr(self,progression):
+        lr = self.init_lr * self.value
+        return lr
+    
+    def get_epoch_lr(self,epoch,losses):
+        return None
