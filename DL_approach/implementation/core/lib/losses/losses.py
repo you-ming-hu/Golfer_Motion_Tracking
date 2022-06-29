@@ -67,7 +67,8 @@ class HeatmapMSE(BaseLoss):
             
             p = torch.sigmoid(p)
             
-            losses = torch.mean((p-y)**2,dim=[2,3])
+            losses = torch.nn.functional.mse_loss(p,y,reduction='none')
+            losses = torch.mean(losses,dim=[2,3])
             
             acc_loss = torch.sum(losses,axis=0)
             acc_count = torch.full_like(acc_loss,torch.sum(flag),dtype=torch.float32)
@@ -286,8 +287,8 @@ class KeypointsPsuedoBBox(BaseLoss):
         bbox_size = torch.tensor([self.bbox_size,self.bbox_size], dtype = torch.float32)/image_size
         bbox_size = bbox_size[None,None,:] #(B,C,(w,h))
         
-        p_area = bbox_size[0] * bbox_size[1]
-        y_area = bbox_size[0] * bbox_size[1]
+        p_area = bbox_size[...,0] * bbox_size[...,1]
+        y_area = bbox_size[...,0] * bbox_size[...,1]
         
         p_coor = torch.concat([p-bbox_size/2,p+bbox_size/2],axis=2)
         y_coor = torch.concat([y-bbox_size/2,y+bbox_size/2],axis=2)
@@ -316,9 +317,6 @@ class KeypointsPsuedoBBox(BaseLoss):
         loss = 1 - loss #(B,C)
         return loss
 
-
-
-    
 class BBoxGIOU(BaseLoss):
     def __init__(self,name,shcedule):
         super().__init__(name,shcedule,None)
