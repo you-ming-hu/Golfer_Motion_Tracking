@@ -198,6 +198,7 @@ class KeypointsRMSE(BaseLoss):
             y = y[flag!=0]
             cf = cf[flag!=0]
             
+            p = torch.sigmoid(p)
             losses = torch.sqrt(torch.sum((p-y)**2,axis=2)) #(B,C)
             losses = torch.maximum(losses-self.tolerance,torch.tensor(0))
             
