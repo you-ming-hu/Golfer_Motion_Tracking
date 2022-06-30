@@ -12,3 +12,5 @@ DL_approach/human-pose-estimation/GolferPrediction/
 DL_approach/prototype/human-pose-estimation/coco/
 DL_approach/implementation/logging/
 DL_approach/implementation/loggings/
+DL_approach/prototype/human-pose-estimation/logging/logging1/log/coco/pose_resnet_50/config_2022-06-30-04-30/events.out.tfevents.1656563456.b242de22e7f4.33.0
+DL_approach/prototype/human-pose-estimation/logging/
