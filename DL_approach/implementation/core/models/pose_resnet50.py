@@ -18,6 +18,7 @@ class Model(torch.nn.Module):
     def __init__(self,pretrained_path):
         super().__init__()
         self.encoder = PoseResNet(pretrained_path)
+        self.encoder.inplanes = 2048
         self.heatmap_head = torch.nn.Sequential(
             self.encoder._make_deconv_layer(3,[256, 256, 256],[4, 4, 4]),
             nn.Conv2d(in_channels=256, out_channels=human_keypoints_count + golfclub_keypoints_count, kernel_size=1))
