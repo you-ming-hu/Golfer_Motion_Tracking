@@ -64,17 +64,20 @@ class Model(torch.nn.Module):
         if self.training:
             self.eval()
         multi_people_heatmap, rest_heatmap, detection = self.intermeidate_forward(x)
-        assert False,'sigmoid?'
-        heatmap = torch.sigmoid(heatmap)
         detection = torch.sigmoid(detection)
-        output = self.foramt_ouuput(heatmap, detection)
+        output = self.foramt_ouuput(multi_people_heatmap, rest_heatmap, detection)
         return output
     
     @torch.no_grad()
     def inference(self,output):
-        # sigmoid_keys = ['leading_role_keypoints','golfclub_keypoints','leading_role_bbox']
-        return output
-        # return {s:torch.sigmoid(t) if not isinstance(t,dict) else {u:torch.sigmoid(v) for u,v in t.items()} for s,t in output.items()}
+        return {
+            'multi_people_heatmap':output['multi_people_heatmap'],
+            'leading_role_heatmap':output['leading_role_heatmap'],
+            'golfclub_heatmap':output['golfclub_heatmap'],
+            'leading_role_keypoints':{'xy':torch.sigmoid(output['leading_role_keypoints']['xy']),'cf':torch.sigmoid(output['leading_role_keypoints']['cf'])},
+            'golfclub_keypoints':{'xy':torch.sigmoid(output['golfclub_keypoints']['xy']),'cf':torch.sigmoid(output['golfclub_keypoints']['cf'])},
+            'leading_role_bbox':{'xywh':torch.sigmoid(output['leading_role_bbox']['xywh']),'cf':torch.sigmoid(output['leading_role_bbox']['cf'])}
+            }
     
     
 
