@@ -145,9 +145,9 @@ class DataProcessorBase:
         self.preprocess = common.preprocess
         self.postprocess = common.postprocess
         
-        self.process_coco_human_param = {'w_full':0.95,'h_full':0.8,'hm_psize_ratio':1/15}
+        self.process_coco_human_param = {'w_full':0.95,'h_full':0.8,'hm_psize_ratio':1/30}
         self.process_coco_dummy_param = {}
-        self.process_golfer_param = {'clubhead_ratio':1/10}
+        self.process_golfer_param = {'clubhead_ratio':1/20}
         
     
     def create_heatmap(self, center, image_size, sig): #x,y format
