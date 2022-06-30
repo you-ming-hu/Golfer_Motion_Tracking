@@ -2,7 +2,7 @@ from albumentations.pytorch.transforms import ToTensorV2
 import albumentations as A
 
 uniform_input_image_size = (512,288) #W,H
-heatmap_downsample = 2
+heatmap_downsample = 8
 
 preprocess = A.CLAHE(8,(2,2),p=1)
 postprocess = A.Sequential([A.ToFloat(p=1),A.Normalize(p=1,max_pixel_value=1),ToTensorV2(p=1)],p=1)
