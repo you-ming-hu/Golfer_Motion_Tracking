@@ -1,6 +1,6 @@
 from .chained_easy_dict import ChainedEasyDict
 import numpy as np
-
+import core.dataset.common
 def initialize_config():
     global Config
     Config = ChainedEasyDict('Config')
@@ -19,4 +19,11 @@ def get_config():
         Auto.RandomSeed.DatasetAugmentation = ds_aug
         Auto.RandomSeed.DatasetShuffle = ds_shuffle
         Auto.RandomSeed.ModelWeight = model_weights
+        
+        Auto.Common.InputImageSize = core.dataset.common.uniform_input_image_size
+        Auto.Common.HeatmapDownsample = core.dataset.common.heatmap_downsample
+        Auto.Common.HMJointRatio = core.dataset.common.hm_joint_ratio
+        Auto.Common.HMClubheadRatio = core.dataset.common.hm_clubhead_ratio
+        Auto.Common.HumanKeypoints = core.dataset.common.human_keypoints
+        Auto.Common.GolfclubKeypoints = core.dataset.common.golfclub_keypoints
     return Config

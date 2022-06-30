@@ -3,6 +3,8 @@ import albumentations as A
 
 uniform_input_image_size = (512,288) #W,H
 heatmap_downsample = 4
+hm_joint_ratio = 1/15
+hm_clubhead_ratio = 1/10
 
 preprocess = A.CLAHE(8,(2,2),p=1)
 postprocess = A.Sequential([A.ToFloat(p=1),A.Normalize(p=1,max_pixel_value=1),ToTensorV2(p=1)],p=1)
