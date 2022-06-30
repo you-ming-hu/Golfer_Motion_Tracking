@@ -50,42 +50,10 @@ class BaseLoss:
     def call(self,p,y):
         raise NotImplementedError
 
-class HeatmapMSE(BaseLoss):
-    def __init__(self,name,shcedule):
-        subclass = {'multi_people_heatmap':common.human_keypoints,'leading_role_heatmap':common.human_keypoints,'golfclub_heatmap':common.golfclub_keypoints}[name]
-        super().__init__(name,shcedule,subclass)
-        
-    def call(self,p,y):
-        flag = y['flag']
-        y = y['heatmap']
-        
-        if torch.sum(flag) == 0:
-            loss = None
-        else:
-            p = p[flag!=0] #(B,C,H,W)
-            y = y[flag!=0]
-            
-            # p = torch.sigmoid(p)
-            
-            losses = torch.nn.functional.mse_loss(p,y,reduction='none')
-            losses = torch.mean(losses,dim=[2,3])
-            
-            acc_loss = torch.sum(losses,axis=0)
-            acc_count = torch.full_like(acc_loss,torch.sum(flag),dtype=torch.float32)
-            
-            total_loss = torch.sum(acc_loss)
-            total_count = torch.sum(acc_count)
-            
-            loss = total_loss/total_count
-            
-            self.update_state(acc_loss,acc_count)
-            
-        return loss
-
-# class HeatmapUnifiedFocalLoss(BaseLoss):
-#     def __init__(self,name,shcedule,weight,delta,gamma):
+# class HeatmapMSE(BaseLoss):
+#     def __init__(self,name,shcedule):
 #         subclass = {'multi_people_heatmap':common.human_keypoints,'leading_role_heatmap':common.human_keypoints,'golfclub_heatmap':common.golfclub_keypoints}[name]
-#         super().__init__(name,shcedule,subclass,weight=weight,delta=delta,gamma=gamma)
+#         super().__init__(name,shcedule,subclass)
         
 #     def call(self,p,y):
 #         flag = y['flag']
@@ -94,16 +62,13 @@ class HeatmapMSE(BaseLoss):
 #         if torch.sum(flag) == 0:
 #             loss = None
 #         else:
-#             p = p[flag!=0]
+#             p = p[flag!=0] #(B,C,H,W)
 #             y = y[flag!=0]
             
-#             p = torch.sigmoid(p)
-#             p = torch.stack([1-p,p],axis=1)
-#             y = torch.stack([1-y,y],axis=1)
+#             # p = torch.sigmoid(p)
             
-#             tversky_losses = self.tversky_loss(p,y,self.delta,self.gamma)
-#             focal_losses = self.focal_loss(p,y,self.delta,self.gamma)
-#             losses = self.weight * tversky_losses + (1-self.weight) * focal_losses
+#             losses = torch.nn.functional.mse_loss(p,y,reduction='none')
+#             losses = torch.mean(losses,dim=[2,3])
             
 #             acc_loss = torch.sum(losses,axis=0)
 #             acc_count = torch.full_like(acc_loss,torch.sum(flag),dtype=torch.float32)
@@ -116,25 +81,60 @@ class HeatmapMSE(BaseLoss):
 #             self.update_state(acc_loss,acc_count)
             
 #         return loss
+
+class HeatmapUnifiedFocalLoss(BaseLoss):
+    def __init__(self,name,shcedule,weight,delta,gamma):
+        subclass = {'multi_people_heatmap':common.human_keypoints,'leading_role_heatmap':common.human_keypoints,'golfclub_heatmap':common.golfclub_keypoints}[name]
+        super().__init__(name,shcedule,subclass,weight=weight,delta=delta,gamma=gamma)
         
-#     def tversky_loss(self,p,y,delta,gamma):
-#         p = torch.clip(p, epsilon, 1. - epsilon) #(B,2,C,H,W)
-#         tp = torch.sum(y * p, axis=[3,4])
-#         fn = torch.sum(y * (1-p), axis=[3,4])
-#         fp = torch.sum((1-y) * p, axis=[3,4])
-#         dice = (tp + epsilon)/(tp + delta*fn + (1-delta)*fp + epsilon)
-#         loss = (1-dice) * torch.pow(1-dice, gamma) #(B,2,C)
-#         loss = torch.sum(loss,axis=1) #(B,C)
-#         return loss
+    def call(self,p,y):
+        flag = y['flag']
+        y = y['heatmap']
         
-#     def focal_loss(self,p,y,delta,gamma):
-#         p = torch.clip(p, epsilon, 1. - epsilon) #(B,2,C,H,W)
-#         ce = -y*torch.log(p)
-#         focal = torch.pow(1 - p, gamma) * ce
-#         focal = torch.stack([focal[:,0,...]*(1 - delta),focal[:,1,...]*delta],axis=1) #(B,2,C,H,W)
-#         loss = torch.sum(focal,axis=1) #(B,C,H,W)
-#         loss = torch.mean(loss,axis=[2,3]) #(B,C)
-#         return loss
+        if torch.sum(flag) == 0:
+            loss = None
+        else:
+            p = p[flag!=0]
+            y = y[flag!=0]
+            
+            p = torch.sigmoid(p)
+            p = torch.stack([1-p,p],axis=1)
+            y = torch.stack([1-y,y],axis=1)
+            
+            tversky_losses = self.tversky_loss(p,y,self.delta,self.gamma)
+            focal_losses = self.focal_loss(p,y,self.delta,self.gamma)
+            losses = self.weight * tversky_losses + (1-self.weight) * focal_losses
+            
+            acc_loss = torch.sum(losses,axis=0)
+            acc_count = torch.full_like(acc_loss,torch.sum(flag),dtype=torch.float32)
+            
+            total_loss = torch.sum(acc_loss)
+            total_count = torch.sum(acc_count)
+            
+            loss = total_loss/total_count
+            
+            self.update_state(acc_loss,acc_count)
+            
+        return loss
+        
+    def tversky_loss(self,p,y,delta,gamma):
+        p = torch.clip(p, epsilon, 1. - epsilon) #(B,2,C,H,W)
+        tp = torch.sum(y * p, axis=[3,4])
+        fn = torch.sum(y * (1-p), axis=[3,4])
+        fp = torch.sum((1-y) * p, axis=[3,4])
+        dice = (tp + epsilon)/(tp + delta*fn + (1-delta)*fp + epsilon)
+        loss = (1-dice) * torch.pow(1-dice, gamma) #(B,2,C)
+        loss = torch.sum(loss,axis=1) #(B,C)
+        return loss
+        
+    def focal_loss(self,p,y,delta,gamma):
+        p = torch.clip(p, epsilon, 1. - epsilon) #(B,2,C,H,W)
+        ce = -y*torch.log(p)
+        focal = torch.pow(1 - p, gamma) * ce
+        focal = torch.stack([focal[:,0,...]*(1 - delta),focal[:,1,...]*delta],axis=1) #(B,2,C,H,W)
+        loss = torch.sum(focal,axis=1) #(B,C,H,W)
+        loss = torch.mean(loss,axis=[2,3]) #(B,C)
+        return loss
             
 class ConfidenceFocalLoss(BaseLoss):
     def __init__(self,name,shcedule,delta,gamma,label_smoothing):

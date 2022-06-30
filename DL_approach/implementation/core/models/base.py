@@ -94,6 +94,6 @@ class BaseModel(torch.nn.Module):
     @torch.no_grad()
     def inference(self,output):
         # sigmoid_keys = ['leading_role_keypoints','golfclub_keypoints','leading_role_bbox']
-        return output
-        # return {s:torch.sigmoid(t) if not isinstance(t,dict) else {u:torch.sigmoid(v) for u,v in t.items()} for s,t in output.items()}
+        # return output
+        return {s:torch.sigmoid(t) if not isinstance(t,dict) else {u:torch.sigmoid(v) for u,v in t.items()} for s,t in output.items()}
 
