@@ -22,12 +22,17 @@ class Model(BaseModel):
         self.name = "u-{}".format(encoder_name)
         self.initialize()
         
-class Decoder(torch.nn.Sequential):
+class Decoder(torch.nn.Module):
     def __init__(self,input_channels,decoder_channels):
+        super().__init__()
         self.out_channels = decoder_channels
         in_channels = [input_channels] + decoder_channels[:-1]
-        blocks = [DecoderBlock(in_ch, out_ch) for in_ch, out_ch in zip(in_channels, decoder_channels)]
-        super().__init__(*blocks)
+        self.blocks = [DecoderBlock(in_ch, out_ch) for in_ch, out_ch in zip(in_channels, decoder_channels)]
+    def forward(self,*features):
+        x = features[-1]
+        for b in self.blocks:
+            x = b(x)
+        return x
     
 class DecoderBlock(torch.nn.Module):
     def __init__(self,in_channels,out_channels):
