@@ -5,10 +5,9 @@ from segmentation_models_pytorch.encoders import get_encoder
 from segmentation_models_pytorch.decoders.unet.decoder import DecoderBlock,CenterBlock
 
 class Model(BaseModel):
-    def __init__(self,encoder_name,decoder_channels=[1024, 512, 256],decoder_attention_type=None):
+    def __init__(self,encoder_name,encoder_weights="imagenet",decoder_channels=[1024, 512, 256],decoder_attention_type=None):
         in_channels = 3
         encoder_depth = 5
-        encoder_weights = "imagenet"
         decoder_use_batchnorm = True
         super().__init__()
         
