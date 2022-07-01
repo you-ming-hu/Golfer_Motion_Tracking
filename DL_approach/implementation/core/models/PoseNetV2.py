@@ -27,11 +27,10 @@ class Decoder(torch.nn.Module):
         super().__init__()
         self.out_channels = decoder_channels
         in_channels = [input_channels] + decoder_channels[:-1]
-        self.blocks = [DecoderBlock(in_ch, out_ch) for in_ch, out_ch in zip(in_channels, decoder_channels)]
+        self.blocks = torch.nn.Sequential(*[DecoderBlock(in_ch, out_ch) for in_ch, out_ch in zip(in_channels, decoder_channels)])
     def forward(self,*features):
         x = features[-1]
-        for b in self.blocks:
-            x = b(x)
+        x = self.blocks(x)
         return x
     
 class DecoderBlock(torch.nn.Module):
