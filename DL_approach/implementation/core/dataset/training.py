@@ -1,3 +1,4 @@
+from sys import ps1, ps2
 import numpy as np
 from pycocotools.coco import COCO
 import pathlib
@@ -13,6 +14,7 @@ from . import common
 import core.lib.schedules.data_schedules as data_schedules
 
 human_keypoints_count = len(common.human_keypoints)
+human_skeleton_count = len(common.human_skeleton)
 golfclub_keypoints_count = len(common.golfclub_keypoints)
 
 class DataReader:
@@ -156,6 +158,12 @@ class DataProcessorBase:
         xx, yy = np.meshgrid(x_axis, y_axis)
         heatmap = np.exp(-0.5 * (np.square(xx) + np.square(yy)) / np.square(sig))
         return heatmap
+    
+    def create_PAF(self,p1,cf1,p2,cf2,image_size,lw):
+        paf = np.zeros((image_size[1],image_size[0]))
+        if cf1 == cf2 == 1:
+            cv2.line(paf,np.round(p1).astype(int),np.round(p2).astype(int),1,int(lw))
+        return paf
 
     def rotate_with_center(self,degree,center,points):
         theta = np.radians(degree)
@@ -264,9 +272,25 @@ class DataAugProcessor(DataProcessorBase):
                     multi_people_heatmap[:,:,j] = np.fmax(multi_people_heatmap[:,:,j], new_hm)
                     if i == leading_role_id:
                         leading_role_heatmap[:,:,j] = new_hm
+        
+        multi_people_paf = np.zeros((t_h,t_w,human_skeleton_count))
+        leading_role_paf = np.zeros((t_h,t_w,human_skeleton_count))
+        for i,sk in enumerate(common.human_skeleton):
+            for j,(cf,kpt) in enumerate(zip(new_keypoints_cf,new_keypoints_xy)):
+                lw = hm_psize[j]/2 + 1
+                p1,cf1 = kpt[sk[0]],cf[sk[0]]
+                p2,cf2 = kpt[sk[1]],cf[sk[1]]
+                new_paf = self.create_PAF(p1,cf1,p2,cf2,(t_w,t_h),lw if i > 4 else ps/3+1)
+                multi_people_paf[:,:,i] = np.fmax(multi_people_paf[:,:,i],new_paf)
+                if j == leading_role_id:
+                    leading_role_paf[:,:,i] = new_paf
+                        
         multi_people_heatmap = cv2.resize(multi_people_heatmap,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
+        multi_people_paf = cv2.resize(multi_people_paf,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
         leading_role_heatmap = cv2.resize(leading_role_heatmap,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
+        leading_role_paf = cv2.resize(leading_role_paf,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
         golfclub_heatmap = np.zeros((golfclub_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        golfclub_paf =  np.zeros((golfclub_keypoints_count-1,hm_h,hm_w),dtype=np.float32)
         #create leading_role_keypoints_xy, leading_role_keypoints_cf
         leading_role_keypoints_xy = (new_keypoints_xy[leading_role_id] / np.array([t_w, t_h])).astype(np.float32)
         leading_role_keypoints_cf = (new_keypoints_cf[leading_role_id]).astype(np.float32)
@@ -282,9 +306,9 @@ class DataAugProcessor(DataProcessorBase):
         
         return {
             'image':image,
-            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'flag':1},
-            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'flag':1},
-            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'flag':1},
+            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'paf':multi_people_paf,'flag':1},
+            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'paf':leading_role_paf,'flag':1},
+            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'paf':golfclub_paf,'flag':1},
             'leading_role_keypoints':{'xy':leading_role_keypoints_xy,'cf':leading_role_keypoints_cf,'flag':1},
             'golfclub_keypoints':{'xy':golfclub_keypoints_xy,'cf':golfclub_keypoints_cf,'flag':1},
             'leading_role_bbox':{'xywh':leading_role_bbox_xywh,'cf':leading_role_bbox_cf,'flag':1}
@@ -378,8 +402,11 @@ class DataAugProcessor(DataProcessorBase):
         
         #creating multi_people_heatmap, leading_role_heatmap and creating golfclub_heatmap
         multi_people_heatmap = np.zeros((human_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        multi_people_paf = np.zeros((human_skeleton_count,hm_h,hm_w),dtype=np.float32)
         leading_role_heatmap = np.zeros((human_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        leading_role_paf = np.zeros((human_skeleton_count,hm_h,hm_w),dtype=np.float32)
         golfclub_heatmap = np.zeros((golfclub_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        golfclub_paf = np.zeros((golfclub_keypoints_count-1,hm_h,hm_w),dtype=np.float32)
         #creating leading_role_keypoints_xy and leading_role_keypoints_cf
         leading_role_keypoints_xy = np.zeros((human_keypoints_count,2),dtype=np.float32)
         leading_role_keypoints_cf = np.zeros(human_keypoints_count,dtype=np.float32)
@@ -392,12 +419,14 @@ class DataAugProcessor(DataProcessorBase):
         
         #postprocess : ToFloat, Normalize, ToTensor
         image = self.postprocess(image=image)['image']
+
+        
         
         return {
             'image':image,
-            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'flag':1},
-            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'flag':1},
-            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'flag':1},
+            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'paf':multi_people_paf,'flag':1},
+            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'paf':leading_role_paf,'flag':1},
+            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'paf':golfclub_paf,'flag':1},
             'leading_role_keypoints':{'xy':leading_role_keypoints_xy,'cf':leading_role_keypoints_cf,'flag':1},
             'golfclub_keypoints':{'xy':golfclub_keypoints_xy,'cf':golfclub_keypoints_cf,'flag':1},
             'leading_role_bbox':{'xywh':leading_role_bbox_xywh,'cf':leading_role_bbox_cf,'flag':1}
@@ -612,14 +641,15 @@ class DataAugProcessor(DataProcessorBase):
         new_glofclub_confidence = np.array([new_grip_cf,new_head_cf])
         new_glofclub_confidence = (new_glofclub_confidence.astype(bool) & glofclub_confidence.astype(bool))
         
-        new_golfclub_keypoints[np.tile((new_glofclub_confidence==0)[:,None],(1,2))] = 0
 
         #transform image
         image = cv2.warpAffine(image,final_transform,(t_w,t_h),flags=cv2.INTER_LINEAR)
         
         #creating multi_people_heatmap and leading_role_heatmap
         multi_people_heatmap = np.zeros((human_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        multi_people_paf = np.zeros((human_skeleton_count,hm_h,hm_w),dtype=np.float32)
         leading_role_heatmap = np.zeros((human_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        leading_role_paf = np.zeros((human_skeleton_count,hm_h,hm_w),dtype=np.float32)
         #creating golfclub_heatmap
         hm_psize = max([1 ,(vector**2).sum()**0.5 * clubhead_ratio])
         golfclub_heatmap = np.zeros((t_h,t_w,golfclub_keypoints_count))
@@ -627,6 +657,13 @@ class DataAugProcessor(DataProcessorBase):
             if new_glofclub_confidence[i] == 1:
                 golfclub_heatmap[:,:,i] = self.create_heatmap(new_golfclub_keypoints[i], (t_w,t_h), hm_psize)
         golfclub_heatmap = cv2.resize(golfclub_heatmap,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
+        
+        golfclub_paf = self.create_PAF(new_golfclub_keypoints[0],new_glofclub_confidence[0],new_golfclub_keypoints[1],1,(t_w,t_h),hm_psize/2)
+        golfclub_paf = cv2.resize(golfclub_paf,(hm_w,hm_h))
+        golfclub_paf = golfclub_paf[None,...].astype(np.float32)
+        
+        new_golfclub_keypoints[np.tile((new_glofclub_confidence==0)[:,None],(1,2))] = 0
+        
         #creating leading_role_keypoints_xy and leading_role_keypoints_cf
         leading_role_keypoints_xy = np.zeros((human_keypoints_count,2),dtype=np.float32)
         leading_role_keypoints_cf = np.zeros(human_keypoints_count,dtype=np.float32)
@@ -639,12 +676,11 @@ class DataAugProcessor(DataProcessorBase):
         
         #postprocess : ToFloat, Normalize, ToTensor
         image = self.postprocess(image=image)['image']
-        
         return {
             'image':image,
-            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'flag':0},
-            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'flag':0},
-            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'flag':1},
+            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'paf':multi_people_paf,'flag':0},
+            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'paf':leading_role_paf,'flag':0},
+            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'paf':golfclub_paf,'flag':1},
             'leading_role_keypoints':{'xy':leading_role_keypoints_xy,'cf':leading_role_keypoints_cf,'flag':0},
             'golfclub_keypoints':{'xy':golfclub_keypoints_xy,'cf':golfclub_keypoints_cf,'flag':1},
             'leading_role_bbox':{'xywh':leading_role_bbox_xywh,'cf':leading_role_bbox_cf,'flag':0}
@@ -720,9 +756,26 @@ class DataNonAugProcessor(DataProcessorBase):
                     multi_people_heatmap[:,:,j] = np.fmax(multi_people_heatmap[:,:,j], new_hm)
                     if i == leading_role_id:
                         leading_role_heatmap[:,:,j] = new_hm
+        
+        multi_people_paf = np.zeros((t_h,t_w,human_skeleton_count))
+        leading_role_paf = np.zeros((t_h,t_w,human_skeleton_count))
+        for i,sk in enumerate(common.human_skeleton):
+            for j,(cf,kpt) in enumerate(zip(new_keypoints_cf,new_keypoints_xy)):
+                lw = hm_psize[j]/2 + 1
+                p1,cf1 = kpt[sk[0]],cf[sk[0]]
+                p2,cf2 = kpt[sk[1]],cf[sk[1]]
+                new_paf = self.create_PAF(p1,cf1,p2,cf2,(t_w,t_h),lw if i > 4 else ps/3+1)
+                multi_people_paf[:,:,i] = np.fmax(multi_people_paf[:,:,i],new_paf)
+                if j == leading_role_id:
+                    leading_role_paf[:,:,i] = new_paf
+                    
         multi_people_heatmap = cv2.resize(multi_people_heatmap,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
+        multi_people_paf = cv2.resize(multi_people_paf,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
         leading_role_heatmap = cv2.resize(leading_role_heatmap,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
+        leading_role_paf = cv2.resize(leading_role_paf,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
         golfclub_heatmap = np.zeros((golfclub_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        golfclub_paf =  np.zeros((golfclub_keypoints_count-1,hm_h,hm_w),dtype=np.float32)
+        
         #create leading_role_keypoints_xy, leading_role_keypoints_cf
         leading_role_keypoints_xy = (new_keypoints_xy[leading_role_id] / np.array([t_w, t_h])).astype(np.float32)
         leading_role_keypoints_cf = (new_keypoints_cf[leading_role_id]).astype(np.float32)
@@ -736,11 +789,11 @@ class DataNonAugProcessor(DataProcessorBase):
         #postprocess : ToFloat, Normalize, ToTensor
         image = self.postprocess(image=image)['image']
         
-        return {
+        return  {
             'image':image,
-            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'flag':1},
-            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'flag':1},
-            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'flag':1},
+            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'paf':multi_people_paf,'flag':1},
+            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'paf':leading_role_paf,'flag':1},
+            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'paf':golfclub_paf,'flag':1},
             'leading_role_keypoints':{'xy':leading_role_keypoints_xy,'cf':leading_role_keypoints_cf,'flag':1},
             'golfclub_keypoints':{'xy':golfclub_keypoints_xy,'cf':golfclub_keypoints_cf,'flag':1},
             'leading_role_bbox':{'xywh':leading_role_bbox_xywh,'cf':leading_role_bbox_cf,'flag':1}
@@ -790,8 +843,11 @@ class DataNonAugProcessor(DataProcessorBase):
         
         #creating multi_people_heatmap, leading_role_heatmap and creating golfclub_heatmap
         multi_people_heatmap = np.zeros((human_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        multi_people_paf = np.zeros((human_skeleton_count,hm_h,hm_w),dtype=np.float32)
         leading_role_heatmap = np.zeros((human_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        leading_role_paf = np.zeros((human_skeleton_count,hm_h,hm_w),dtype=np.float32)
         golfclub_heatmap = np.zeros((golfclub_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        golfclub_paf = np.zeros((golfclub_keypoints_count-1,hm_h,hm_w),dtype=np.float32)
         #creating leading_role_keypoints_xy and leading_role_keypoints_cf
         leading_role_keypoints_xy = np.zeros((human_keypoints_count,2),dtype=np.float32)
         leading_role_keypoints_cf = np.zeros(human_keypoints_count,dtype=np.float32)
@@ -807,9 +863,9 @@ class DataNonAugProcessor(DataProcessorBase):
         
         return {
             'image':image,
-            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'flag':1},
-            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'flag':1},
-            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'flag':1},
+            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'paf':multi_people_paf,'flag':1},
+            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'paf':leading_role_paf,'flag':1},
+            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'paf':golfclub_paf,'flag':1},
             'leading_role_keypoints':{'xy':leading_role_keypoints_xy,'cf':leading_role_keypoints_cf,'flag':1},
             'golfclub_keypoints':{'xy':golfclub_keypoints_xy,'cf':golfclub_keypoints_cf,'flag':1},
             'leading_role_bbox':{'xywh':leading_role_bbox_xywh,'cf':leading_role_bbox_cf,'flag':1}
@@ -915,8 +971,6 @@ class DataNonAugProcessor(DataProcessorBase):
         new_glofclub_confidence = np.array([new_grip_cf,new_head_cf])
         new_glofclub_confidence = (new_glofclub_confidence.astype(bool) & glofclub_confidence.astype(bool))
         
-        new_golfclub_keypoints[np.tile((new_glofclub_confidence==0)[:,None],(1,2))] = 0
-        
         #get final transform
         src = np.array([img_center,img_top,img_left],dtype=np.float32)
         dst = np.array([new_center,new_top,new_right],dtype=np.float32)
@@ -927,7 +981,9 @@ class DataNonAugProcessor(DataProcessorBase):
         
         #creating multi_people_heatmap and leading_role_heatmap
         multi_people_heatmap = np.zeros((human_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        multi_people_paf = np.zeros((human_skeleton_count,hm_h,hm_w),dtype=np.float32)
         leading_role_heatmap = np.zeros((human_keypoints_count,hm_h,hm_w),dtype=np.float32)
+        leading_role_paf = np.zeros((human_skeleton_count,hm_h,hm_w),dtype=np.float32)
         #creating golfclub_heatmap
         hm_psize = max([1 ,(vector**2).sum()**0.5 * clubhead_ratio])
         golfclub_heatmap = np.zeros((t_h,t_w,golfclub_keypoints_count))
@@ -935,6 +991,13 @@ class DataNonAugProcessor(DataProcessorBase):
             if new_glofclub_confidence[i] == 1:
                 golfclub_heatmap[:,:,i] = self.create_heatmap(new_golfclub_keypoints[i], (t_w,t_h), hm_psize)
         golfclub_heatmap = cv2.resize(golfclub_heatmap,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
+        
+        golfclub_paf = self.create_PAF(new_golfclub_keypoints[0],new_glofclub_confidence[0],new_golfclub_keypoints[1],1,(t_w,t_h),hm_psize/2)
+        golfclub_paf = cv2.resize(golfclub_paf,(hm_w,hm_h))
+        golfclub_paf = golfclub_paf[None,...].astype(np.float32)
+        
+        new_golfclub_keypoints[np.tile((new_glofclub_confidence==0)[:,None],(1,2))] = 0
+        
         #creating leading_role_keypoints_xy and leading_role_keypoints_cf
         leading_role_keypoints_xy = np.zeros((human_keypoints_count,2),dtype=np.float32)
         leading_role_keypoints_cf = np.zeros(human_keypoints_count,dtype=np.float32)
@@ -950,9 +1013,9 @@ class DataNonAugProcessor(DataProcessorBase):
         
         return {
             'image':image,
-            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'flag':0},
-            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'flag':0},
-            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'flag':1},
+            'multi_people_heatmap':{'heatmap':multi_people_heatmap,'paf':multi_people_paf,'flag':0},
+            'leading_role_heatmap':{'heatmap':leading_role_heatmap,'paf':leading_role_paf,'flag':0},
+            'golfclub_heatmap':{'heatmap':golfclub_heatmap,'paf':golfclub_paf,'flag':1},
             'leading_role_keypoints':{'xy':leading_role_keypoints_xy,'cf':leading_role_keypoints_cf,'flag':0},
             'golfclub_keypoints':{'xy':golfclub_keypoints_xy,'cf':golfclub_keypoints_cf,'flag':1},
             'leading_role_bbox':{'xywh':leading_role_bbox_xywh,'cf':leading_role_bbox_cf,'flag':0}

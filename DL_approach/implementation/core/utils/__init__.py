@@ -100,12 +100,20 @@ def record_inference(Config,training_epoch_count,image,label):
     label = {s:t.cpu().numpy() if not isinstance(t,dict) else {u:v.cpu().numpy() for u,v in t.items()} for s,t in label.items()}
     
     def get_heatmap(name):
-        heatmap = label[name]
+        heatmap = label[name]['heatmap']
         heatmap = heatmap.transpose([0,2,3,1])
         return heatmap
     multi_people_heatmap = get_heatmap('multi_people_heatmap')
     leading_role_heatmap = get_heatmap('leading_role_heatmap')
     golfclub_heatmap = get_heatmap('golfclub_heatmap')
+    
+    def get_paf(name):
+        paf = label[name]['paf']
+        paf = paf.transpose([0,2,3,1])
+        return paf
+    multi_people_paf = get_paf('multi_people_heatmap')
+    leading_role_paf = get_paf('leading_role_heatmap')
+    golfclub_paf = get_paf('golfclub_heatmap')
     
     def get_coor_cf(name):
         xy = np.round(label[name]['xy'] * image_shape).astype(int)
@@ -123,7 +131,9 @@ def record_inference(Config,training_epoch_count,image,label):
     save_path.mkdir(parents=True,exist_ok=True)
     for data in zip(
         image,
-        multi_people_heatmap, leading_role_heatmap, golfclub_heatmap,
+        multi_people_heatmap,multi_people_paf,
+        leading_role_heatmap,leading_role_paf,
+        golfclub_heatmap,golfclub_paf,
         leading_role_keypoints_xy, leading_role_keypoints_cf,
         golfclub_keypoints_xy, golfclub_keypoints_cf,
         leading_role_bbox_xywh,leading_role_bbox_cf):
