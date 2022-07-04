@@ -1,10 +1,13 @@
 from .chained_easy_dict import ChainedEasyDict
 import numpy as np
+import datetime
 import core.dataset.common
+
 def initialize_config():
     global Config
     Config = ChainedEasyDict('Config')
     with Config:
+        Config.AutoGenerate.ExecuteTime = str(datetime.datetime.now())
         Config.AutoGenerate.TrainStages = ['train','val']
     return Config
     
@@ -25,5 +28,6 @@ def get_config():
         Auto.Common.HMJointRatio = core.dataset.common.hm_joint_ratio
         Auto.Common.HMClubheadRatio = core.dataset.common.hm_clubhead_ratio
         Auto.Common.HumanKeypoints = core.dataset.common.human_keypoints
+        Auto.Common.HumanSkeletons = core.dataset.common.human_skeleton
         Auto.Common.GolfclubKeypoints = core.dataset.common.golfclub_keypoints
     return Config

@@ -1,5 +1,5 @@
 from .losses import BaseLoss
-from .losses import HeatmapUnifiedFocalLoss, PAFUnifiedFocalLoss, AUXUnifiedFocalLoss
+from .losses import HeatmapUnifiedFocalLoss, PAFUnifiedFocalLoss#, AUXUnifiedFocalLoss
 
 from .losses import KeypointsPsuedoBBox, ConfidenceFocalLoss, BBoxGIOU
 
@@ -19,15 +19,15 @@ class HybridLoss:
         
         self.multi_people_heatmap = HeatmapUnifiedFocalLoss('multi_people_heatmap',**multi_people_heatmap_param)
         self.multi_people_paf = PAFUnifiedFocalLoss('multi_people_heatmap',**multi_people_heatmap_param)
-        self.multi_people_aux = AUXUnifiedFocalLoss('multi_people_heatmap',**multi_people_heatmap_param)
+        # self.multi_people_aux = AUXUnifiedFocalLoss('multi_people_heatmap',**multi_people_heatmap_param)
         
         self.leading_role_heatmap = HeatmapUnifiedFocalLoss('leading_role_heatmap',**leading_role_heatmap_param)
         self.leading_role_paf = PAFUnifiedFocalLoss('leading_role_heatmap',**leading_role_heatmap_param)
-        self.leading_role_aux = AUXUnifiedFocalLoss('leading_role_heatmap',**leading_role_heatmap_param)
+        # self.leading_role_aux = AUXUnifiedFocalLoss('leading_role_heatmap',**leading_role_heatmap_param)
         
         self.golfclub_heatmap = HeatmapUnifiedFocalLoss('golfclub_heatmap',**golfclub_heatmap_param)
         self.golfclub_paf = PAFUnifiedFocalLoss('golfclub_heatmap',**golfclub_heatmap_param)
-        self.golfclub_aux = AUXUnifiedFocalLoss('golfclub_heatmap',**golfclub_heatmap_param)
+        # self.golfclub_aux = AUXUnifiedFocalLoss('golfclub_heatmap',**golfclub_heatmap_param)
         
         self.leading_role_keypoints = KeypointsPsuedoBBox('leading_role_keypoints',**leading_role_keypoints_param)
         self.leading_role_keypoints_cf = ConfidenceFocalLoss('leading_role_keypoints',**leading_role_keypoints_cf_param)

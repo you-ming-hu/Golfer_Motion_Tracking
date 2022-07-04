@@ -5,12 +5,18 @@ from segmentation_models_pytorch.encoders import get_encoder
 from segmentation_models_pytorch.decoders.unet.decoder import DecoderBlock,CenterBlock
 
 class Model(BaseModel):
-    def __init__(self,encoder_name,encoder_weights="imagenet",decoder_channels=[1024, 512, 256],decoder_attention_type=None,decoder_type='original',paf_stages=6):
+    def __init__(
+        self,
+        encoder_name,
+        encoder_weights="imagenet",
+        decoder_channels=[1024, 512, 256],
+        decoder_attention_type=None,
+        decoder_type='original'):
+        
         in_channels = 3
         encoder_depth = 5
         decoder_use_batchnorm = True
         super().__init__()
-        self.paf_stages = paf_stages
         self.encoder = get_encoder(
             encoder_name,
             in_channels=in_channels,
@@ -114,12 +120,12 @@ class DepthSkipDecoder(torch.nn.Module):
         skips = features[1:]
 
         x = self.center(head)
-        output = torch.nn.functional.interpolate(self.depth_skips[0](x), scale_factor=2**len(self.out_channels), mode="bilinear")
+        output = torch.nn.functional.interpolate(self.depth_skips[0](x), scale_factor=2**len(self.out_channels), mode="bilinear",align_corners=False)
         for i, decoder_block in enumerate(self.blocks):
             skip = skips[i] if i < len(skips) else None
             x = decoder_block(x, skip)
             if i < len(self.blocks) - 1:
-                output = output + torch.nn.functional.interpolate(self.depth_skips[i+1](x), scale_factor=2**(len(self.out_channels)-i-1), mode="bilinear")
+                output = output + torch.nn.functional.interpolate(self.depth_skips[i+1](x), scale_factor=2**(len(self.out_channels)-i-1), mode="bilinear",align_corners=False)
             else:
                 output = output + x
         return output

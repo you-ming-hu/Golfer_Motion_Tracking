@@ -174,43 +174,43 @@ class PAFUnifiedFocalLoss(UnifiedFocalLoss):
             self.update_state(acc_loss,acc_count)
         return loss
 
-class AUXUnifiedFocalLoss(UnifiedFocalLoss):
-    def __init__(self,name,shcedule,weight,delta,gamma):
-        super().__init__(name,shcedule,['heatmap','paf'],weight,delta,gamma)
+# class AUXUnifiedFocalLoss(UnifiedFocalLoss):
+#     def __init__(self,name,shcedule,weight,delta,gamma):
+#         super().__init__(name,shcedule,['heatmap','paf'],weight,delta,gamma)
         
-    def call(self,p,y):
-        flag = y['flag']
-        y_heatmap = y['heatmap'][:,None,...]
-        x_heatmap = p['aux_heatmap']
-        y_paf = y['paf'][:,None,...]
-        x_paf = p['aux_paf']
+#     def call(self,p,y):
+#         flag = y['flag']
+#         y_heatmap = y['heatmap'][:,None,...]
+#         x_heatmap = p['aux_heatmap']
+#         y_paf = y['paf'][:,None,...]
+#         x_paf = p['aux_paf']
         
-        if torch.sum(flag) == 0:
-            loss = None
-        else:
-            y_heatmap = y_heatmap[flag!=0]
-            x_heatmap = x_heatmap[flag!=0]
-            y_paf = y_paf[flag!=0]
-            x_paf = x_paf[flag!=0]
+#         if torch.sum(flag) == 0:
+#             loss = None
+#         else:
+#             y_heatmap = y_heatmap[flag!=0]
+#             x_heatmap = x_heatmap[flag!=0]
+#             y_paf = y_paf[flag!=0]
+#             x_paf = x_paf[flag!=0]
             
-            heatmap_losses = super().call(x_heatmap,y_heatmap) #(B,S,C)
-            heatmap_losses = torch.mean(heatmap_losses,axis=[1,2]) #(B)
+#             heatmap_losses = super().call(x_heatmap,y_heatmap) #(B,S,C)
+#             heatmap_losses = torch.mean(heatmap_losses,axis=[1,2]) #(B)
             
-            paf_losses = super().call(x_paf,y_paf) #(B,S,C)
-            paf_losses = torch.mean(paf_losses,axis=[1,2]) #(B)
+#             paf_losses = super().call(x_paf,y_paf) #(B,S,C)
+#             paf_losses = torch.mean(paf_losses,axis=[1,2]) #(B)
             
-            losses = torch.stack([heatmap_losses,paf_losses],dim=1)
+#             losses = torch.stack([heatmap_losses,paf_losses],dim=1)
             
-            acc_loss = torch.sum(losses,axis=0)
-            acc_count = torch.full_like(acc_loss,torch.sum(flag),dtype=torch.float32)
+#             acc_loss = torch.sum(losses,axis=0)
+#             acc_count = torch.full_like(acc_loss,torch.sum(flag),dtype=torch.float32)
             
-            total_loss = torch.sum(acc_loss)
-            total_count = torch.sum(acc_count)
+#             total_loss = torch.sum(acc_loss)
+#             total_count = torch.sum(acc_count)
             
-            loss = total_loss/total_count
+#             loss = total_loss/total_count
             
-            self.update_state(acc_loss,acc_count)
-        return loss
+#             self.update_state(acc_loss,acc_count)
+#         return loss
 
 # class HeatmapUnifiedFocalLoss(BaseLoss):
 #     def __init__(self,name,shcedule,weight,delta,gamma):
