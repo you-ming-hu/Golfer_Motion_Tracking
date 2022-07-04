@@ -21,11 +21,7 @@ class BaseLoss:
         self.buffer = {'acc_count':np.zeros(self.buffer_size),'acc_loss':np.zeros(self.buffer_size)}
         
     def update_state(self,acc_loss,acc_count):
-        try:
-            self.buffer['acc_loss'] = self.buffer['acc_loss'] + acc_loss.cpu().detach().numpy()
-        except ValueError:
-            print(str(self),self.subclass,acc_loss.shape)
-            raise Exception
+        self.buffer['acc_loss'] = self.buffer['acc_loss'] + acc_loss.cpu().detach().numpy()
         self.buffer['acc_count'] = self.buffer['acc_count'] + acc_count.cpu().detach().numpy()
         
     def result(self):
@@ -203,7 +199,9 @@ class AUXUnifiedFocalLoss(UnifiedFocalLoss):
             paf_losses = super().call(x_paf,y_paf) #(B,S,C)
             paf_losses = torch.mean(paf_losses,axis=[1,2]) #(B)
             
-            acc_loss = torch.stack([heatmap_losses,paf_losses],dim=1)
+            losses = torch.stack([heatmap_losses,paf_losses],dim=1)
+            
+            acc_loss = torch.sum(losses,axis=0)
             acc_count = torch.full_like(acc_loss,torch.sum(flag),dtype=torch.float32)
             
             total_loss = torch.sum(acc_loss)
