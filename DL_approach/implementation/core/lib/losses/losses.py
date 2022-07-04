@@ -21,7 +21,11 @@ class BaseLoss:
         self.buffer = {'acc_count':np.zeros(self.buffer_size),'acc_loss':np.zeros(self.buffer_size)}
         
     def update_state(self,acc_loss,acc_count):
-        self.buffer['acc_loss'] = self.buffer['acc_loss'] + acc_loss.cpu().detach().numpy()
+        try:
+            self.buffer['acc_loss'] = self.buffer['acc_loss'] + acc_loss.cpu().detach().numpy()
+        except ValueError:
+            print(str(self),self.subclass,acc_loss.shape)
+            raise Exception
         self.buffer['acc_count'] = self.buffer['acc_count'] + acc_count.cpu().detach().numpy()
         
     def result(self):
