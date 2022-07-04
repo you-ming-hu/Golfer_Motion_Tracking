@@ -4,29 +4,17 @@ from segmentation_models_pytorch.base import initialization as init
 import core.dataset.common as common
 
 human_keypoints_count = len(common.human_keypoints)
+human_skeleton_count = len(common.human_skeleton)
 golfclub_keypoints_count = len(common.golfclub_keypoints)
+golfclub_skeleton_count = golfclub_keypoints_count - 1
 
-heatmap_count = human_keypoints_count*2 + golfclub_keypoints_count
+heatmap_count = human_keypoints_count*2 + human_skeleton_count*2 + golfclub_keypoints_count + golfclub_skeleton_count
 target_count = human_keypoints_count*3 + golfclub_keypoints_count*3 + 5
-
-class DetectionHead(torch.nn.Sequential):
-    def __init__(self,in_channel,kernels):
-        r = (target_count*2/in_channel)**(1/len(kernels))
-        channels = [round(in_channel*(r)**i) for i in range(len(kernels)+1)]
-        
-        mods = []
-        for i,k in enumerate(kernels):
-            mods.append(torch.nn.Conv2d(channels[i],channels[i+1],k))
-            mods.append(torch.nn.Mish())
-        mods.append(torch.nn.Flatten())
-        mods.append(torch.nn.Linear(channels[-1], target_count, bias=False))
-        super().__init__(*mods)
-
 
 class BaseModel(torch.nn.Module):
     
     def initialize(self):
-        self.heatmap_head = torch.nn.Conv2d(self.decoder.out_channels[-1], heatmap_count, kernel_size=1)
+        self.heatmap_head = HeatmapHead(self.decoder.out_channels[-1],self.paf_stages)
         self.detection_head = DetectionHead(self.encoder.out_channels[-1],[(3,4),(3,4),(2,4),(2,4),(3,4)])
         
         init.initialize_decoder(self.decoder)
@@ -48,12 +36,12 @@ class BaseModel(torch.nn.Module):
         self.check_input_shape(x)
         features = self.encoder(x)
         decoder_output = self.decoder(*features)
-        heatmap = self.heatmap_head(decoder_output)
+        heatmaps = self.heatmap_head(decoder_output)
         detection = self.detection_head(features[-1])
-        return heatmap, detection
+        return heatmaps, detection
     
-    def foramt_ouuput(self, heatmap, detection):
-        multi_people_heatmap,leading_role_heatmap,golfclub_heatmap = torch.split(heatmap,[human_keypoints_count,human_keypoints_count,golfclub_keypoints_count],dim=1)
+    def foramt_ouuput(self, heatmaps, detection):
+        multi_people_heatmap,leading_role_heatmap,golfclub_heatmap = heatmaps
     
         leading_role_keypoints,golfclub_keypoints,leading_role_bbox = torch.split(detection,[human_keypoints_count*3,golfclub_keypoints_count*3,5],dim=-1)
         
@@ -76,24 +64,104 @@ class BaseModel(torch.nn.Module):
             }
     
     def forward(self,x):
-        heatmap, detection = self.intermeidate_forward(x)
-        output = self.foramt_ouuput(heatmap, detection)
+        heatmaps, detection = self.intermeidate_forward(x)
+        output = self.foramt_ouuput(heatmaps, detection)
         return output
 
     @torch.no_grad()
     def predict(self, x):
         if self.training:
             self.eval()
-        heatmap, detection = self.intermeidate_forward(x)
-        assert False,'sigmoid?'
-        heatmap = torch.sigmoid(heatmap)
-        detection = torch.sigmoid(detection)
-        output = self.foramt_ouuput(heatmap, detection)
+        output = self.forward(x)
+        output = self.inference(output)
         return output
     
     @torch.no_grad()
     def inference(self,output):
-        # sigmoid_keys = ['leading_role_keypoints','golfclub_keypoints','leading_role_bbox']
-        # return output
         return {s:torch.sigmoid(t) if not isinstance(t,dict) else {u:torch.sigmoid(v) for u,v in t.items()} for s,t in output.items()}
 
+class DetectionHead(torch.nn.Sequential):
+    def __init__(self,in_channel,kernels):
+        r = (target_count*2/in_channel)**(1/len(kernels))
+        channels = [round(in_channel*(r)**i) for i in range(len(kernels)+1)]
+        
+        mods = []
+        for i,k in enumerate(kernels):
+            mods.append(torch.nn.Conv2d(channels[i],channels[i+1],k))
+            mods.append(torch.nn.Mish())
+        mods.append(torch.nn.Flatten())
+        mods.append(torch.nn.Linear(channels[-1], target_count, bias=False))
+        super().__init__(*mods)
+
+class HeatmapHead(torch.nn.Module):
+    def __init__(self,in_channels,paf_stages):
+        super().__init__()
+        self.multi_people_branch = PAFBranch(in_channels,human_keypoints_count,human_skeleton_count,paf_stages)
+        self.leading_role_branch = PAFBranch(in_channels,human_keypoints_count,human_skeleton_count,paf_stages)
+        self.golfclub_branch = PAFBranch(in_channels,golfclub_keypoints_count,golfclub_skeleton_count,paf_stages)
+        
+    def forward(self,x):
+        multi_people = self.multi_people_branch(x)
+        leading_role = self.leading_role_branch(x)
+        golfclub = self.golfclub_branch(x)
+        return multi_people,leading_role,golfclub
+
+class PAFBranch(torch.nn.Module):
+    def __init__(self,in_channels,heatmap_channels,paf_channels,stages):
+        super().__init__()
+        self.heatmap_channels = heatmap_channels
+        self.paf_channels = paf_channels
+        
+        self.sigmoid = torch.nn.Sigmoid()
+        
+        self.stem = torch.nn.Sequential(
+            torch.nn.Conv2d(in_channels,heatmap_channels+paf_channels,3,padding=1),
+            torch.nn.Mish(),
+            torch.nn.Conv2d(heatmap_channels+paf_channels,heatmap_channels+paf_channels,3,padding=1),
+            torch.nn.Mish(),
+            torch.nn.Conv2d(heatmap_channels+paf_channels,heatmap_channels+paf_channels,3,padding=1),
+            torch.nn.Mish(),
+            torch.nn.Conv2d(heatmap_channels+paf_channels,heatmap_channels+paf_channels,1),
+            torch.nn.Mish(),
+            torch.nn.Conv2d(heatmap_channels+paf_channels,heatmap_channels+paf_channels,1)
+        )
+        self.blocks = torch.nn.ModuleList([
+            torch.nn.Sequential(
+            torch.nn.Conv2d(in_channels+heatmap_channels+paf_channels,heatmap_channels+paf_channels,7,padding=3),
+            torch.nn.Mish(),
+            torch.nn.Conv2d(heatmap_channels+paf_channels,heatmap_channels+paf_channels,7,padding=3),
+            torch.nn.Mish(),
+            torch.nn.Conv2d(heatmap_channels+paf_channels,heatmap_channels+paf_channels,7,padding=3),
+            torch.nn.Mish(),
+            torch.nn.Conv2d(heatmap_channels+paf_channels,heatmap_channels+paf_channels,7,padding=3),
+            torch.nn.Mish(),
+            torch.nn.Conv2d(heatmap_channels+paf_channels,heatmap_channels+paf_channels,7,padding=3),
+            torch.nn.Mish(),
+            torch.nn.Conv2d(heatmap_channels+paf_channels,heatmap_channels+paf_channels,1),
+            torch.nn.Mish(),
+            torch.nn.Conv2d(heatmap_channels+paf_channels,heatmap_channels+paf_channels,1))
+        for _ in range(stages-1)])
+    
+    def forward(self,fm):
+        hms = []
+        pafs = []
+        
+        x = self.stem(fm)
+        hm,paf = torch.split(x,[self.heatmap_channels,self.paf_channels],dim=1)
+        hms.append(hm)
+        pafs.append(paf)
+        
+        for b in self.blocks:
+            x = self.sigmoid(x)
+            x = torch.concat([x,fm],dim=1)
+            x = b(x)
+            hm,paf = torch.split(x,[self.heatmap_channels,self.paf_channels],dim=1)
+            hms.append(hm)
+            pafs.append(paf)
+            
+        hms = torch.stack(hms[:-1],dim=1)
+        pafs = torch.stack(pafs[:-1],dim=1)
+        
+        return {'heatmap':hm,'paf':paf,'aux_heatmap':hms,'aux_paf':pafs}
+
+    
