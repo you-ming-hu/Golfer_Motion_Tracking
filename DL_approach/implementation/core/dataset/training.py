@@ -162,7 +162,7 @@ class DataProcessorBase:
     def create_PAF(self,p1,cf1,p2,cf2,image_size,lw):
         paf = np.zeros((image_size[1],image_size[0]))
         if cf1 == cf2 == 1:
-            cv2.line(paf,np.round(p1).astype(int),np.round(p2).astype(int),1,int(lw))
+            cv2.line(paf,np.round(p1).astype(int),np.round(p2).astype(int),1,int(lw+1))
         return paf
 
     def rotate_with_center(self,degree,center,points):
