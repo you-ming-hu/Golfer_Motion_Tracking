@@ -30,7 +30,7 @@ class DataReader:
             if count == 0:
                 select_dataset = []
             else:
-                if self.seed is not None:
+                if self.seed is None:
                     select_dataset = self.random_state.sample(dataset,k=count)
                 else:
                     select_dataset = random.Random(self.seed).sample(dataset,k=count)
