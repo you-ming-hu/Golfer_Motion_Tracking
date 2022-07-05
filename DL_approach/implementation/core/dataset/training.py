@@ -18,18 +18,22 @@ human_skeleton_count = len(common.human_skeleton)
 golfclub_keypoints_count = len(common.golfclub_keypoints)
 
 class DataReader:
-    def __init__(self,stage,coco_path,golfer_path):
+    def __init__(self,stage,coco_path,golfer_path,seed=None):
         self.coco_dummy, self.coco_human = self.get_coco_dataset(stage,coco_path)
         self.golfer = self.get_golfer_dataset(stage,golfer_path)
         self.random_state = random.Random()
         self.random_state.setstate(random.getstate())
+        self.seed = seed
         
     def select(self,dataset,count):
         if count < len(dataset):
             if count == 0:
                 select_dataset = []
             else:
-                select_dataset = self.random_state.sample(dataset,k=count)
+                if self.seed is not None:
+                    select_dataset = self.random_state.sample(dataset,k=count)
+                else:
+                    select_dataset = random.Random(self.seed).sample(dataset,k=count)
         else:
             select_dataset = dataset
         return select_dataset

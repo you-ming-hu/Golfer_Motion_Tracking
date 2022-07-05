@@ -92,6 +92,7 @@ for _ in range(training_epochs):
     writer = writers[stage]
     
     model.eval()
+    save_inference_random_state = np.random.RandomState(0)
     for batch_data in dataloader:
         batch_data = {s:t.to(device) if not isinstance(t,dict) else {u:v.to(device) for u,v in t.items()} for s,t in batch_data.items()}
         
@@ -103,7 +104,7 @@ for _ in range(training_epochs):
         core.utils.update_stage_result(dataloader,loss_func.result())
         
         output = model.inference(output)
-        core.utils.record_inference(Config,training_epoch_count,batch_data['image'],output)
+        core.utils.record_inference(Config,training_epoch_count,batch_data['image'],output,save_inference_random_state)
     
     lr_scheduler.epoch(training_epoch_count,loss_func.losses)
     loss_func.log(writer,training_data_count)

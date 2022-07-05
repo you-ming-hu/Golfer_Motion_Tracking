@@ -15,19 +15,17 @@ import core.models
 def get_dataloaders(Config):
     coco_path = Config.Training.Dataset.CocoPath
     golfer_path = Config.Training.Dataset.GolferPath
-    base_count = Config.Training.Dataset.Select.BaseCount
-    golfer_schedule = Config.Training.Dataset.Select.Golfer
-    coco_human_shcedule = Config.Training.Dataset.Select.CocoHuman
-    coco_dummy_schedule = Config.Training.Dataset.Select.CocoDummy
+    train_composition = Config.Training.Dataset.Train.Composition
+    val_composition = Config.Training.Dataset.Val.Composition
     
     train_reader = core.dataset.training.DataReader(Config.AutoGenerate.TrainStages[0],coco_path,golfer_path)
-    val_reader = core.dataset.training.DataReader(Config.AutoGenerate.TrainStages[1],coco_path,golfer_path)
+    val_reader = core.dataset.training.DataReader(Config.AutoGenerate.TrainStages[1],coco_path,golfer_path,seed=0)
     
     aug_processor = core.dataset.training.DataAugProcessor()
     non_aug_processor = core.dataset.training.DataNonAugProcessor()
     
-    train_dataset = core.dataset.training.Dataset(train_reader,aug_processor,base_count,golfer_schedule,coco_human_shcedule,coco_dummy_schedule)
-    val_dataset = core.dataset.training.Dataset(val_reader,non_aug_processor,base_count,golfer_schedule,coco_human_shcedule,coco_dummy_schedule)
+    train_dataset = core.dataset.training.Dataset(train_reader,aug_processor,**train_composition)
+    val_dataset = core.dataset.training.Dataset(val_reader,non_aug_processor,**val_composition)
     
     train_dataloader = core.dataset.training.DataLoader(
         train_dataset,
@@ -85,7 +83,7 @@ def save_model(model,epoch_count,Config):
         save_root.mkdir(parents=True,exist_ok=True)
         torch.save(model.state_dict(),save_root.joinpath(f'{epoch_count:0>3}.pt'))
     
-def record_inference(Config,training_epoch_count,image,label):
+def record_inference(Config,training_epoch_count,image,label,random_state=np.random.RandomState(None)):
     save_path = pathlib.Path(Config.Record.RootPath,'visualize',f'{training_epoch_count:0>3}')
     vis_prob = Config.Record.VisualizeRatio
     threshold = Config.Record.DetectThreshold
@@ -137,5 +135,6 @@ def record_inference(Config,training_epoch_count,image,label):
         leading_role_keypoints_xy, leading_role_keypoints_cf,
         golfclub_keypoints_xy, golfclub_keypoints_cf,
         leading_role_bbox_xywh,leading_role_bbox_cf):
-        visualize(save_path, vis_prob, threshold, *data)
+        if bool(random_state.binomial(1,p=vis_prob)):
+            visualize(save_path, threshold, *data)
     
