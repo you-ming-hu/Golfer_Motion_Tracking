@@ -13,6 +13,10 @@ target_count = human_keypoints_count*3 + golfclub_keypoints_count*3 + 5
 
 class BaseModel(torch.nn.Module):
     
+    def freeze_encoder(self):
+        for param in self.encoder.parameters():
+            param.requires_grad = False
+    
     def initialize(self):
         self.heatmap_head = HeatmapHead(self.decoder.out_channels[-1],6)
         self.detection_head = DetectionHead(self.encoder.out_channels[-1],[(3,4),(3,4),(2,4),(2,4),(3,4)])

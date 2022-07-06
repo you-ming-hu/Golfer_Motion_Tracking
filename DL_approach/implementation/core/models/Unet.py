@@ -9,6 +9,7 @@ class Model(BaseModel):
         self,
         encoder_name,
         encoder_weights="imagenet",
+        encoder_freeze = False,
         decoder_channels=[1024, 512, 256],
         decoder_attention_type=None,
         decoder_type='original'):
@@ -22,6 +23,9 @@ class Model(BaseModel):
             in_channels=in_channels,
             depth=encoder_depth,
             weights=encoder_weights)
+        if encoder_freeze:
+            self.freeze_encoder()
+        
         if decoder_type=='original':
             self.decoder = Decoder(
                 encoder_channels=self.encoder.out_channels,
