@@ -125,7 +125,7 @@ class HeatmapHead(torch.nn.Module):
         
         self.blocks = torch.nn.ModuleList([
             torch.nn.Sequential(
-            torch.nn.Conv2d(in_channels+heatmap_count,heatmap_count,1),
+            torch.nn.Conv2d(heatmap_count,heatmap_count,1),
             torch.nn.Mish(),
             torch.nn.Conv2d(heatmap_count,heatmap_count,5,padding=2),
             torch.nn.Mish(),
@@ -137,11 +137,13 @@ class HeatmapHead(torch.nn.Module):
             )
         for _ in range(stages-1)])
         
-    def forward(self,fm):
-        x = self.stem(fm)
+        self.final = torch.nn.Conv2d(heatmap_count,heatmap_count,1)
+        
+    def forward(self,x):
+        x = self.stem(x)
         for b in self.blocks:
-            x = torch.concat([x,fm],dim=1)
-            x = b(x)
+            x = b(x) + x
+        x = self.final(x)
         return x 
 
     
