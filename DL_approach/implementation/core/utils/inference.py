@@ -22,19 +22,22 @@ def visualize(
     
     plt.title('multi_people_heatmap',fontsize=50)
     plt.imshow(image)
-    plt.imshow(cv2.resize(np.fmax(multi_people_heatmap.max(axis=-1),multi_people_paf.max(axis=-1)),image_shape),alpha=0.5,cmap='jet')
+    # plt.imshow(cv2.resize(np.fmax(multi_people_heatmap.max(axis=-1),multi_people_paf.max(axis=-1)),image_shape),alpha=0.5,cmap='jet')
+    plt.imshow(cv2.resize(multi_people_heatmap.max(axis=-1),image_shape),alpha=0.5,cmap='jet')
     plt.axis(False)
 
     plt.subplot(2,2,2)
     plt.title('leading_role_heatmap',fontsize=50)
     plt.imshow(image)
-    plt.imshow(cv2.resize(np.fmax(leading_role_heatmap.max(axis=-1),leading_role_paf.max(axis=-1)),image_shape),alpha=0.5,cmap='jet')
+    # plt.imshow(cv2.resize(np.fmax(leading_role_heatmap.max(axis=-1),leading_role_paf.max(axis=-1)),image_shape),alpha=0.5,cmap='jet')
+    plt.imshow(cv2.resize(leading_role_heatmap.max(axis=-1),image_shape),alpha=0.5,cmap='jet')
     plt.axis(False)
     
     plt.subplot(2,2,3)
     plt.title('golfclub_heatmap',fontsize=50)
     plt.imshow(image)
-    plt.imshow(cv2.resize(np.fmax(golfclub_heatmap.max(axis=-1),golfclub_paf.max(axis=-1)),image_shape),alpha=0.5,cmap='jet')
+    # plt.imshow(cv2.resize(np.fmax(golfclub_heatmap.max(axis=-1),golfclub_paf.max(axis=-1)),image_shape),alpha=0.5,cmap='jet')
+    plt.imshow(cv2.resize(golfclub_heatmap.max(axis=-1),image_shape),alpha=0.5,cmap='jet')
     plt.axis(False)
 
     for i in range(len(core.dataset.common.human_keypoints)):
