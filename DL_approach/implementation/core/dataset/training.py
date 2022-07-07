@@ -191,7 +191,7 @@ class DataAugProcessor(DataProcessorBase):
         
         self.aug_coco_human_param = {
             'sacle':np.log(1.2),
-            'h_full_range':(0.6,0.9),}
+            'h_full_range':(0.55,0.65),}
         self.aug_coco_dummy_param = {
             'random_resize':{'prob':0.3,'scale':np.log(1.2)},
             'random_rot':{'prob':0.3,'degree':10},
@@ -215,14 +215,14 @@ class DataAugProcessor(DataProcessorBase):
         #Spatial-level transforms
         t_w = self.img_w
         t_h = self.img_h
-        t_aspect = t_w/t_h
+        # t_aspect = t_w/t_h
         
         hm_h = self.hm_h
         hm_w = self.hm_w
         
         param = self.process_coco_human_param
         w_full = param['w_full']
-        h_full = param['h_full']
+        # h_full = param['h_full']
         hm_psize_ratio = param['hm_psize_ratio']
         
         aug_param = self.aug_coco_human_param
@@ -231,16 +231,25 @@ class DataAugProcessor(DataProcessorBase):
         
         #get affine transform
         x,y,w,h = clean_anns[leading_role_id]['bbox']
-        new_w,new_h = (np.exp(np.random.uniform(-scale,scale,2)) * np.array([w,h])).astype(int)
-        new_aspect = new_w/new_h
-        if new_aspect > t_aspect:
-            if new_w > t_w:
-                new_w = int(t_w*w_full)
-                new_h = int(new_w/new_aspect)
-        else:
-            if new_h > t_h * h_full:
-                new_h = int(t_h*np.random.uniform(*h_full_range))
-                new_w = int(new_h*new_aspect)
+        aspect = w/h
+        
+        new_aspect = aspect * np.exp(np.random.uniform(-scale,scale))/np.exp(np.random.uniform(-scale,scale))
+        new_h = int(np.random.uniform(*h_full_range)*t_h)
+        new_w = int(new_h*new_aspect)
+        if new_w > t_w:
+            new_w = int(t_w*w_full)
+            new_h = int(new_w/new_aspect)
+        
+        # new_w,new_h = (np.exp(np.random.uniform(-scale,scale,2)) * np.array([w,h])).astype(int)
+        # new_aspect = new_w/new_h
+        # if new_aspect > t_aspect:
+        #     if new_w > t_w:
+        #         new_w = int(t_w*w_full)
+        #         new_h = int(new_w/new_aspect)
+        # else:
+        #     if new_h > t_h * h_full:
+        #         new_h = int(t_h*np.random.uniform(*h_full_range))
+        #         new_w = int(new_h*new_aspect)
         new_x = np.random.randint(0,max(1,t_w-new_w))
         new_y = np.random.randint(0,max(1,t_h-new_h))
         src = np.array([[x,y],[x+w,y],[x,y+h]])
