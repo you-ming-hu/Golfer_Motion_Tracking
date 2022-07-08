@@ -18,5 +18,6 @@ class DetectionHead(BaseDetectionHead):
         self.layers = torch.nn.Sequential(*mods)
     
     def forward(self,x):
-        return self.layers(x)
+        x = self.layers(x)
+        return x
         
