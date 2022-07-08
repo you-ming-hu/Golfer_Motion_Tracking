@@ -9,6 +9,9 @@ class HybridLoss:
         multi_people_heatmap_param,
         leading_role_heatmap_param,
         golfclub_heatmap_param,
+        multi_people_paf_param,
+        leading_role_paf_param,
+        golfclub_paf_param,
         leading_role_keypoints_param,
         leading_role_keypoints_cf_param,
         golfclub_keypoints_param,
@@ -18,15 +21,15 @@ class HybridLoss:
         ):
         
         self.multi_people_heatmap = HeatmapUnifiedFocalLoss('multi_people_heatmap',**multi_people_heatmap_param)
-        self.multi_people_paf = PAFUnifiedFocalLoss('multi_people_heatmap',**multi_people_heatmap_param)
-        # self.multi_people_aux = AUXUnifiedFocalLoss('multi_people_heatmap',**multi_people_heatmap_param)
-        
         self.leading_role_heatmap = HeatmapUnifiedFocalLoss('leading_role_heatmap',**leading_role_heatmap_param)
-        self.leading_role_paf = PAFUnifiedFocalLoss('leading_role_heatmap',**leading_role_heatmap_param)
-        # self.leading_role_aux = AUXUnifiedFocalLoss('leading_role_heatmap',**leading_role_heatmap_param)
-        
         self.golfclub_heatmap = HeatmapUnifiedFocalLoss('golfclub_heatmap',**golfclub_heatmap_param)
-        self.golfclub_paf = PAFUnifiedFocalLoss('golfclub_heatmap',**golfclub_heatmap_param)
+        
+        self.multi_people_paf = PAFUnifiedFocalLoss('multi_people_heatmap',**multi_people_paf_param)
+        self.leading_role_paf = PAFUnifiedFocalLoss('leading_role_heatmap',**leading_role_paf_param)
+        self.golfclub_paf = PAFUnifiedFocalLoss('golfclub_heatmap',**golfclub_paf_param)
+        
+        # self.multi_people_aux = AUXUnifiedFocalLoss('multi_people_heatmap',**multi_people_heatmap_param)
+        # self.leading_role_aux = AUXUnifiedFocalLoss('leading_role_heatmap',**leading_role_heatmap_param)
         # self.golfclub_aux = AUXUnifiedFocalLoss('golfclub_heatmap',**golfclub_heatmap_param)
         
         self.leading_role_keypoints = KeypointsPsuedoBBox('leading_role_keypoints',**leading_role_keypoints_param)
@@ -75,22 +78,15 @@ class HybridLoss:
         for name,l in self.__dict__.items():
             if isinstance(l,BaseLoss):
                 if l.schedule != 0:
-                    try:
-                        loss = l(p,y)
-                        if loss is not None:
-                            schedule = l.schedule if isinstance(l.schedule,(int,float)) else l.schedule(progression)
-                            hybrid_loss = hybrid_loss + loss * schedule
-                            count += 1
-                            self.update_state(str(l),loss * schedule)
-                    except KeyError as err:
-                        print(err)
-                        print(f"model doesn't output {name} so it's removed from hybrid loss function")
-                        drop_loss_name.append(name)
+                    loss = l(p,y)
+                    if loss is not None:
+                        schedule = l.schedule if isinstance(l.schedule,(int,float)) else l.schedule(progression)
+                        hybrid_loss = hybrid_loss + loss * schedule
+                        count += 1
+                        self.update_state(str(l),loss * schedule)
                 else:
                     print(f"{name} schedule is 0 so it's removed from hybrid loss function")
                     drop_loss_name.append(name)
-        del p
-        del y
                     
         for name in drop_loss_name:
             self.__delattr__(name)
