@@ -83,8 +83,10 @@ class Model(torch.nn.Module):
         features = self.encoder(x)
         decoder_output = self.decoder(*features)
         heatmap = self.heatmap_head(decoder_output)
+        print(heatmap.shape)
         if self.detection_head is not None:
             detection = self.detection_head(features[-1])
+            print(detection.shape)
         else:
             detection = None
         return heatmap, detection
@@ -93,6 +95,7 @@ class Model(torch.nn.Module):
         output = {}
         
         if self.use_paf:
+            print('use_paf')
             multi_people_heatmap,leading_role_heatmap,golfclub_heatmap = torch.split(heatmap,[
                 human_keypoints_count+human_skeleton_count,
                 human_keypoints_count+human_skeleton_count,
@@ -109,6 +112,7 @@ class Model(torch.nn.Module):
             })
         
         else:
+            print('no paf')
             multi_people_heatmap,leading_role_heatmap,golfclub_heatmap = torch.split(heatmap,[
                 human_keypoints_count,
                 human_keypoints_count,
@@ -121,6 +125,7 @@ class Model(torch.nn.Module):
             })
         
         if detection is not None:
+            print('split detection')
             leading_role_keypoints,golfclub_keypoints,leading_role_bbox = torch.split(detection,[human_keypoints_count*3,golfclub_keypoints_count*3,5],dim=-1)
             
             leading_role_keypoints_xy, leading_role_keypoints_cf = torch.split(leading_role_keypoints,[human_keypoints_count*2,human_keypoints_count],dim=-1)
