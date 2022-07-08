@@ -71,7 +71,7 @@ class HybridLoss:
     def __call__(self,p,y,progression=None):
         hybrid_loss = 0
         count = 0
-        
+        drop_loss_name = []
         for name,l in self.__dict__.items():
             if isinstance(l,BaseLoss):
                 if l.schedule != 0:
@@ -85,7 +85,13 @@ class HybridLoss:
                     except KeyError as err:
                         print(err)
                         print(f"model doesn't output {name} so it's removed from hybrid loss function")
-                        self.__delattr__(name)
+                        drop_loss_name.append(name)
+                else:
+                    print(f"{name} schedule is 0 so it's removed from hybrid loss function")
+                    drop_loss_name.append(name)
+                    
+        for name in drop_loss_name:
+            self.__delattr__(name)
         
         if count == 0:
             hybrid_loss =  None
