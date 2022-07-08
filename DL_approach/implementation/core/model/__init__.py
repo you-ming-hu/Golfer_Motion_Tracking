@@ -90,6 +90,8 @@ class Model(torch.nn.Module):
         return heatmap, detection
     
     def foramt_ouuput(self, heatmap, detection):
+        output = {}
+        
         if self.use_paf:
             multi_people_heatmap,leading_role_heatmap,golfclub_heatmap = torch.split(heatmap,[
                 human_keypoints_count+human_skeleton_count,
@@ -99,21 +101,24 @@ class Model(torch.nn.Module):
             multi_people_heatmap = {k:v for k,v in zip(('heatmap','paf'),torch.split(multi_people_heatmap,[human_keypoints_count,human_skeleton_count],dim=1))}
             leading_role_heatmap = {k:v for k,v in zip(('heatmap','paf'),torch.split(leading_role_heatmap,[human_keypoints_count,human_skeleton_count],dim=1))}
             golfclub_heatmap = {k:v for k,v in zip(('heatmap','paf'),torch.split(golfclub_heatmap,[golfclub_keypoints_count,golfclub_skeleton_count],dim=1))}
+
+            output.update({
+                'multi_people_heatmap':multi_people_heatmap,
+                'leading_role_heatmap':leading_role_heatmap,
+                'golfclub_heatmap':golfclub_heatmap
+            })
+        
         else:
             multi_people_heatmap,leading_role_heatmap,golfclub_heatmap = torch.split(heatmap,[
                 human_keypoints_count,
                 human_keypoints_count,
                 golfclub_keypoints_count],dim=1)
             
-            multi_people_heatmap = {'heatmap':multi_people_heatmap}
-            leading_role_heatmap = {'heatmap':leading_role_heatmap}
-            golfclub_heatmap = {'heatmap':golfclub_heatmap}
-            
-        output = {
-            'multi_people_heatmap':multi_people_heatmap,
-            'leading_role_heatmap':leading_role_heatmap,
-            'golfclub_heatmap':golfclub_heatmap
-            }
+            output.update({
+                'multi_people_heatmap':{'heatmap':multi_people_heatmap},
+                'leading_role_heatmap':{'heatmap':leading_role_heatmap},
+                'golfclub_heatmap':{'heatmap':golfclub_heatmap}
+            })
         
         if detection is not None:
             leading_role_keypoints,golfclub_keypoints,leading_role_bbox = torch.split(detection,[human_keypoints_count*3,golfclub_keypoints_count*3,5],dim=-1)
