@@ -1,44 +1,28 @@
 import torch
 
-from .base import BaseModel
-from segmentation_models_pytorch.encoders import get_encoder
+from .base import BaseDecoder
 
-class Model(BaseModel):
+class Decoder(BaseDecoder):
     def __init__(
         self,
-        encoder_name,
-        encoder_weights="imagenet",
-        encoder_freeze = False,
+        encoder_channels,
+        out_channels
         ):
-        
-        super().__init__()
-        self.encoder = get_encoder(
-            encoder_name,
-            in_channels=3,
-            depth=5,
-            weights=encoder_weights)
-        if encoder_freeze:
-            self.freeze_encoder()
-        
-        self.decoder = Decoder(
-            encoder_channels=self.encoder.out_channels,
-            decoder_stages=3)
-        
-        self.name = "u-{}".format(encoder_name)
-        self.initialize()
-        
-class Decoder(torch.nn.Module):
-    def __init__(self,encoder_channels,decoder_stages):
-        super().__init__()
+        super().__init__(encoder_channels=encoder_channels,out_channels=out_channels)
+        encoder_channels = encoder_channels[1:]
         encoder_channels = encoder_channels[::-1]
-        self.head = DecoderHead(encoder_channels[0],[(3,4),(3,4),(2,4),(2,4),(3,4)],2,4)
-        self.blocks = torch.nn.ModuleList([DecoderBlock(ic,oc,2,4) for ic,oc in zip(encoder_channels[:decoder_stages],encoder_channels[1:decoder_stages+1])])
-        self.decoder_stages = decoder_stages
-        self.out_channels = encoder_channels[1:decoder_stages+1]
+        head_channels = encoder_channels[0]
+        in_channels = [head_channels] + list(out_channels[:-1])
+        skip_channels = list(encoder_channels[1:]) + [0]
+        
+        self.head = DecoderHead(head_channels,[(3,4),(3,4),(2,4),(2,4),(3,4)],2,4)
+
+        self.blocks = torch.nn.ModuleList([
+            DecoderBlock(ic,sc,oc,2,4) for ic,sc,oc in zip(in_channels, skip_channels, out_channels)
+            ])
         
     def forward(self,*fms):
         fms = fms[::-1]
-        fms = fms[:self.decoder_stages+1]
         
         x = fms[0]
         x = self.head(x)
@@ -72,22 +56,22 @@ class DecoderHead(torch.nn.Module):
         return outputs
     
 class DecoderBlock(torch.nn.Module):
-    def __init__(self,in_channel,skip_channel,conv_count,se):
+    def __init__(self,in_channels, skip_channels, out_channels,conv_count,se):
         super().__init__()
         self.upsample = torch.nn.UpsamplingBilinear2d(scale_factor=2)
         self.attention1 = torch.nn.Sequential(
-            torch.nn.Conv2d(in_channel+skip_channel,(in_channel+skip_channel)//se,3,padding=1),
+            torch.nn.Conv2d(in_channels+skip_channels,(in_channels+skip_channels)//se,3,padding=1),
             torch.nn.Mish(),
-            torch.nn.Conv2d((in_channel+skip_channel)//se,in_channel+skip_channel,1),
+            torch.nn.Conv2d((in_channels+skip_channels)//se,in_channels+skip_channels,1),
             torch.nn.Sigmoid()
             )
         self.convs = torch.nn.Sequential(
-            ConvBlock(in_channel+skip_channel,skip_channel),
-            *[ConvBlock(skip_channel,skip_channel) for _ in range(conv_count-1)])
+            ConvBlock(in_channels+skip_channels,out_channels),
+            *[ConvBlock(out_channels,out_channels) for _ in range(conv_count-1)])
         self.attention2 = torch.nn.Sequential(
-            torch.nn.Conv2d(skip_channel,skip_channel//se,1),
+            torch.nn.Conv2d(out_channels,out_channels//se,1),
             torch.nn.Mish(),
-            torch.nn.Conv2d(skip_channel//se,skip_channel,1),
+            torch.nn.Conv2d(out_channels//se,out_channels,1),
             torch.nn.Sigmoid()
             )
         

@@ -7,7 +7,7 @@ BN_MOMENTUM = 0.1
 
 
 import core.dataset.common as common
-from .base import DetectionHead
+from ..base import DetectionHead
 
 human_keypoints_count = len(common.human_keypoints)
 golfclub_keypoints_count = len(common.golfclub_keypoints)
