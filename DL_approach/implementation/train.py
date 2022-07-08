@@ -65,14 +65,14 @@ for _ in range(training_epochs):
             output = model(batch_data['image'])
             hybrid_loss = loss_func(output,batch_data,training_progression)
         
-            if hybrid_loss is not None:
-                lr = lr_scheduler.step(training_progression)
-                
-                scaler.scale(hybrid_loss).backward()
-                scaler.step(optimizer)
-                scaler.update()
-                
-                optimizer.zero_grad()
+        if hybrid_loss is not None:
+            lr = lr_scheduler.step(training_progression)
+            
+            scaler.scale(hybrid_loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+            
+            optimizer.zero_grad()
         
         if training_step_count % steps_per_record == 0:
             core.utils.update_stage_result(dataloader,loss_func.result())
