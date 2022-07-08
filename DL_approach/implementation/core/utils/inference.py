@@ -40,21 +40,24 @@ def visualize(
     plt.imshow(cv2.resize(golfclub_heatmap.max(axis=-1),image_shape),alpha=0.5,cmap='jet')
     plt.axis(False)
 
-    for i in range(len(core.dataset.common.human_keypoints)):
-        if leading_role_keypoints_cf[i] > cf_threshold:
-            xy = leading_role_keypoints_xy[i]
-            cv2.circle(image,xy,5,(1,0,0),2)
-
-    for i in range(len(core.dataset.common.golfclub_keypoints)):
-        if golfclub_keypoints_cf[i] > cf_threshold:
-            xy = golfclub_keypoints_xy[i]
-            cv2.circle(image,xy,5,(0,0,1),2)
-            
-    if leading_role_bbox_cf > cf_threshold:
-        xywh = leading_role_bbox_xywh
-        lt = (xywh[:2]-xywh[2:]/2).astype(int)
-        rb = (xywh[:2]+xywh[2:]/2).astype(int)
-        cv2.rectangle(image,lt,rb,(1,0,0),2)
+    if (leading_role_keypoints_cf is not None) and (leading_role_keypoints_xy is not None):
+        for i in range(len(core.dataset.common.human_keypoints)):
+            if leading_role_keypoints_cf[i] > cf_threshold:
+                xy = leading_role_keypoints_xy[i]
+                cv2.circle(image,xy,5,(1,0,0),2)
+                
+    if (golfclub_keypoints_cf is not None) and (golfclub_keypoints_xy is not None):
+        for i in range(len(core.dataset.common.golfclub_keypoints)):
+            if golfclub_keypoints_cf[i] > cf_threshold:
+                xy = golfclub_keypoints_xy[i]
+                cv2.circle(image,xy,5,(0,0,1),2)
+    
+    if (leading_role_bbox_cf is not None) and (leading_role_bbox_xywh is not None):
+        if leading_role_bbox_cf > cf_threshold:
+            xywh = leading_role_bbox_xywh
+            lt = (xywh[:2]-xywh[2:]/2).astype(int)
+            rb = (xywh[:2]+xywh[2:]/2).astype(int)
+            cv2.rectangle(image,lt,rb,(1,0,0),2)
     
     plt.subplot(2,2,4)
     plt.title('keypoints',fontsize=50)

@@ -72,15 +72,20 @@ class HybridLoss:
         hybrid_loss = 0
         count = 0
         
-        for _,l in self.__dict__.items():
+        for name,l in self.__dict__.items():
             if isinstance(l,BaseLoss):
                 if l.schedule != 0:
-                    loss = l(p,y)
-                    if loss is not None:
-                        schedule = l.schedule if isinstance(l.schedule,(int,float)) else l.schedule(progression)
-                        hybrid_loss = hybrid_loss + loss * schedule
-                        count += 1
-                        self.update_state(str(l),loss * schedule)
+                    try:
+                        loss = l(p,y)
+                        if loss is not None:
+                            schedule = l.schedule if isinstance(l.schedule,(int,float)) else l.schedule(progression)
+                            hybrid_loss = hybrid_loss + loss * schedule
+                            count += 1
+                            self.update_state(str(l),loss * schedule)
+                    except KeyError as err:
+                        print(err)
+                        print(f"model doesn't output {name} so it's removed from hybrid loss function")
+                        self.__delattr__(name)
         
         if count == 0:
             hybrid_loss =  None

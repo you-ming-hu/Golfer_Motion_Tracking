@@ -10,7 +10,7 @@ import core.dataset.training
 import core.lib.losses
 import core.lib.schedules.lr_schedules
 
-import core.models
+import core.model
 
 def get_dataloaders(Config):
     coco_path = Config.Training.Dataset.CocoPath
@@ -55,7 +55,7 @@ def get_writers(Config):
     return {k:v for k,v in zip(Config.AutoGenerate.TrainStages,(train_writer, val_writer))}
 
 def get_model(Config):
-    model = getattr(core.models,Config.Model.Name).Model(**Config.Model.Param)
+    model = core.model.Model(**Config.Model)
     return model
 
 def get_optimizer(model,Config):
@@ -98,32 +98,44 @@ def record_inference(Config,training_epoch_count,image,label,random_state=np.ran
     label = {s:t.cpu().numpy() if not isinstance(t,dict) else {u:v.cpu().numpy() for u,v in t.items()} for s,t in label.items()}
     
     def get_heatmap(name):
-        heatmap = label[name]['heatmap']
-        heatmap = heatmap.transpose([0,2,3,1])
-        return heatmap
+        try:
+            heatmap = label[name]['heatmap']
+            heatmap = heatmap.transpose([0,2,3,1])
+            return heatmap
+        except KeyError:
+            return None
     multi_people_heatmap = get_heatmap('multi_people_heatmap')
     leading_role_heatmap = get_heatmap('leading_role_heatmap')
     golfclub_heatmap = get_heatmap('golfclub_heatmap')
     
     def get_paf(name):
-        paf = label[name]['paf']
-        paf = paf.transpose([0,2,3,1])
-        return paf
+        try:
+            paf = label[name]['paf']
+            paf = paf.transpose([0,2,3,1])
+            return paf
+        except KeyError:
+            return None
     multi_people_paf = get_paf('multi_people_heatmap')
     leading_role_paf = get_paf('leading_role_heatmap')
     golfclub_paf = get_paf('golfclub_heatmap')
     
     def get_coor_cf(name):
-        xy = np.round(label[name]['xy'] * image_shape).astype(int)
-        cf = label[name]['cf']
-        return xy,cf
+        try:
+            xy = np.round(label[name]['xy'] * image_shape).astype(int)
+            cf = label[name]['cf']
+            return xy,cf
+        except KeyError:
+            return None,None
     leading_role_keypoints_xy,leading_role_keypoints_cf = get_coor_cf('leading_role_keypoints')
     golfclub_keypoints_xy,golfclub_keypoints_cf = get_coor_cf('golfclub_keypoints')
     
     def get_bbox_cf():
-        xywh = np.round(label['leading_role_bbox']['xywh'] * np.tile(image_shape,2)).astype(int)
-        cf = label['leading_role_bbox']['cf']
-        return xywh,cf
+        try:
+            xywh = np.round(label['leading_role_bbox']['xywh'] * np.tile(image_shape,2)).astype(int)
+            cf = label['leading_role_bbox']['cf']
+            return xywh,cf
+        except KeyError:
+            return None,None
     leading_role_bbox_xywh,leading_role_bbox_cf = get_bbox_cf()
     
     save_path.mkdir(parents=True,exist_ok=True)
