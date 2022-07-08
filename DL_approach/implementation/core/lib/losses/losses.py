@@ -121,9 +121,9 @@ class HeatmapUnifiedFocalLoss(UnifiedFocalLoss):
         super().__init__(name,shcedule,subclass,weight,delta,gamma)
         
     def call(self,p,y):
+        p = p['heatmap']
         flag = y['flag']
         y = y['heatmap']
-        p = p['heatmap']
         
         if torch.sum(flag) == 0:
             loss = None
@@ -151,9 +151,9 @@ class PAFUnifiedFocalLoss(UnifiedFocalLoss):
         super().__init__(name,shcedule,subclass,weight,delta,gamma)
         
     def call(self,p,y):
+        p = p['paf']
         flag = y['flag']
         y = y['paf']
-        p = p['paf']
         
         if torch.sum(flag) == 0:
             loss = None
@@ -272,9 +272,9 @@ class ConfidenceFocalLoss(BaseLoss):
         super().__init__(name,shcedule,subclass,delta=delta,gamma=gamma,label_smoothing=label_smoothing)
         
     def call(self,p,y):
+        p = p['cf']
         flag = y['flag']
         y = y['cf']
-        p = p['cf']
         
         if torch.sum(flag) == 0:
             loss = None
@@ -383,10 +383,10 @@ class KeypointsPsuedoBBox(BaseLoss):
         super().__init__(name,shcedule,subclass,bbox_size=bbox_size)
         
     def call(self,p,y):
+        p = p['xy']
         flag = y['flag']
         cf = y['cf']
         y = y['xy']
-        p = p['xy']
         
         if torch.sum(flag) == 0:
             loss = None
@@ -453,10 +453,10 @@ class BBoxGIOU(BaseLoss):
         super().__init__(name,shcedule,None)
         
     def call(self,p,y):
+        p = p['xywh']
         flag = y['flag']
         cf = y['cf']
         y = y['xywh']
-        p = p['xywh']
         
         if torch.sum(flag) == 0:
             loss = None
