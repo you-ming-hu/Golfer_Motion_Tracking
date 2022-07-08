@@ -89,6 +89,8 @@ class HybridLoss:
                 else:
                     print(f"{name} schedule is 0 so it's removed from hybrid loss function")
                     drop_loss_name.append(name)
+        del p
+        del y
                     
         for name in drop_loss_name:
             self.__delattr__(name)
