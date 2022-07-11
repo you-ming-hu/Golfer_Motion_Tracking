@@ -77,16 +77,12 @@ class HybridLoss:
         drop_loss_name = []
         for name,l in self.__dict__.items():
             if isinstance(l,BaseLoss):
-                if l.schedule != 0:
-                    loss = l(p,y)
-                    if loss is not None:
-                        schedule = l.schedule if isinstance(l.schedule,(int,float)) else l.schedule(progression)
-                        hybrid_loss = hybrid_loss + loss * schedule
-                        count += 1
-                        self.update_state(str(l),loss * schedule)
-                else:
-                    print(f"{name} schedule is 0 so it's removed from hybrid loss function")
-                    drop_loss_name.append(name)
+                loss = l(p,y)
+                if loss is not None:
+                    schedule = l.schedule if isinstance(l.schedule,(int,float)) else l.schedule(progression)
+                    hybrid_loss = hybrid_loss + loss * schedule
+                    count += 1
+                    self.update_state(str(l),loss * schedule)
                     
         for name in drop_loss_name:
             self.__delattr__(name)

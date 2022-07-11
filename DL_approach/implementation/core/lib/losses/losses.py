@@ -7,6 +7,13 @@ import core.lib.schedules.loss_schedules as loss_schedules
 epsilon = 1e-7
 
 class BaseLoss:
+    def __new__(clz,name,schedule,subclass,**kwdarg):
+        if schedule == 0:
+            print(f'{clz.__name__} {name} schedule is 0, removed from loss') 
+            return None
+        else:
+            return object.__new__(clz)
+    
     def __init__(self,name,schedule,subclass,**kwdarg):
         for k,v in kwdarg.items():
             setattr(self,k,v)
