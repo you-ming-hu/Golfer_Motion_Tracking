@@ -4,7 +4,7 @@ import torch
 class HeatmapHead(BaseHeatmapHead):
     def __init__(self,in_channels,num_classes,repeats=[3,2,1,1,1],stages=5,inner_leak=0.1,outer_leak=2):
         super().__init__(in_channels=in_channels,num_classes=num_classes)
-        assert len(repeats) == stages-1
+        assert len(repeats) == stages
         self.stem = torch.nn.Sequential(
             torch.nn.Conv2d(in_channels,num_classes,1),
             torch.nn.Mish(),
