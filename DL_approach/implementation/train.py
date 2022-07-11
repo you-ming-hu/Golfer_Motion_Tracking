@@ -1,3 +1,5 @@
+import shutil
+import time
 import random
 import numpy as np
 import torch
@@ -110,3 +112,10 @@ for _ in range(training_epochs):
     loss_func.log(writer,training_data_count)
 
     training_epoch_count+=1
+    
+time.sleep(60)
+shutil.make_archive(
+    Config.AutoGenerate.SavePath.Logging,
+    'zip',
+    Config.AutoGenerate.SavePath.Logging)
+print('Finish!')

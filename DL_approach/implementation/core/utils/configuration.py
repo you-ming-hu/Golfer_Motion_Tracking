@@ -30,4 +30,7 @@ def get_config():
         Auto.Common.HumanKeypoints = core.dataset.common.human_keypoints
         Auto.Common.HumanSkeletons = core.dataset.common.human_skeleton
         Auto.Common.GolfclubKeypoints = core.dataset.common.golfclub_keypoints
+        
+        Auto.SavePath.Logging = Config.Record.RootPath + '/logging'
+        Auto.SavePath.ModelWeights = Config.Record.RootPath + '/model_weights'
     return Config

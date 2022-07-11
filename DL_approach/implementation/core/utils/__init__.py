@@ -50,8 +50,8 @@ def get_loss_func(Config):
     return hybrid_loss
 
 def get_writers(Config):
-    train_writer = SummaryWriter(pathlib.Path(Config.Record.RootPath,'record',Config.AutoGenerate.TrainStages[0]).as_posix())
-    val_writer = SummaryWriter(pathlib.Path(Config.Record.RootPath,'record',Config.AutoGenerate.TrainStages[1]).as_posix())
+    train_writer = SummaryWriter(pathlib.Path(Config.AutoGenerate.SavePath.Logging,'record',Config.AutoGenerate.TrainStages[0]).as_posix())
+    val_writer = SummaryWriter(pathlib.Path(Config.AutoGenerate.SavePath.Logging,'record',Config.AutoGenerate.TrainStages[1]).as_posix())
     return {k:v for k,v in zip(Config.AutoGenerate.TrainStages,(train_writer, val_writer))}
 
 def get_model(Config):
@@ -68,7 +68,7 @@ def get_lr_scheduler(optimizer,Config):
     return lr_scheduler(optimizer)
 
 def save_config(Config):
-    save_root = pathlib.Path(Config.Record.RootPath)
+    save_root = pathlib.Path(Config.AutoGenerate.SavePath.Logging)
     save_root.mkdir(parents=True,exist_ok=True)
     save_root.joinpath('config.txt').write_text(str(Config))
     pickle.dump(Config,save_root.joinpath('config.pkl').open('wb'))
@@ -78,13 +78,12 @@ def update_stage_result(dataloader,losses):
     dataloader.set_postfix(**{k:'{:.4f}'.format(v) if v is not None else 'None' for k,v in losses.items()})
     
 def save_model(model,epoch_count,Config):
-    if Config.Record.SaveModelWeights:
-        save_root = pathlib.Path(Config.Record.RootPath,'model_weights')
-        save_root.mkdir(parents=True,exist_ok=True)
-        torch.save(model.state_dict(),save_root.joinpath(f'{epoch_count:0>3}.pt'))
+    save_root = pathlib.Path(Config.AutoGenerate.SavePath.ModelWeights)
+    save_root.mkdir(parents=True,exist_ok=True)
+    torch.save(model.state_dict(),save_root.joinpath(f'{epoch_count:0>3}.pt'))
     
 def record_inference(Config,training_epoch_count,image,label,random_state=np.random.RandomState(None)):
-    save_path = pathlib.Path(Config.Record.RootPath,'visualize',f'{training_epoch_count:0>3}')
+    save_path = pathlib.Path(Config.AutoGenerate.SavePath.Logging,'visualize',f'{training_epoch_count:0>3}')
     vis_prob = Config.Record.VisualizeRatio
     threshold = Config.Record.DetectThreshold
     
