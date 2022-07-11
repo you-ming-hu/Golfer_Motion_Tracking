@@ -7,7 +7,7 @@ import core.lib.schedules.loss_schedules as loss_schedules
 epsilon = 1e-7
 
 class BaseLoss:
-    def __new__(clz,name,schedule,subclass,**kwdarg):
+    def __new__(clz,name,schedule,**kwdarg):
         if schedule == 0:
             print(f'{clz.__name__} {name} schedule is 0, removed from loss') 
             return None
@@ -58,9 +58,9 @@ class BaseLoss:
         raise NotImplementedError
 
 # class HeatmapMSE(BaseLoss):
-#     def __init__(self,name,shcedule):
+#     def __init__(self,name,schedule):
 #         subclass = {'multi_people_heatmap':common.human_keypoints,'leading_role_heatmap':common.human_keypoints,'golfclub_heatmap':common.golfclub_keypoints}[name]
-#         super().__init__(name,shcedule,subclass)
+#         super().__init__(name,schedule,subclass)
         
 #     def call(self,p,y):
 #         flag = y['flag']
@@ -90,8 +90,8 @@ class BaseLoss:
 #         return loss
 
 class UnifiedFocalLoss(BaseLoss):
-    def __init__(self,name,shcedule,subclass,weight,delta,gamma):
-        super().__init__(name,shcedule,subclass,weight=weight,delta=delta,gamma=gamma)
+    def __init__(self,name,schedule,subclass,weight,delta,gamma):
+        super().__init__(name,schedule,subclass,weight=weight,delta=delta,gamma=gamma)
         
     def call(self,p,y):
         p = torch.sigmoid(p)
@@ -123,9 +123,9 @@ class UnifiedFocalLoss(BaseLoss):
         return loss
     
 class HeatmapUnifiedFocalLoss(UnifiedFocalLoss):
-    def __init__(self,name,shcedule,weight,delta,gamma):
+    def __init__(self,name,schedule,weight,delta,gamma):
         subclass = {'multi_people_heatmap':common.human_keypoints,'leading_role_heatmap':common.human_keypoints,'golfclub_heatmap':common.golfclub_keypoints}[name]
-        super().__init__(name,shcedule,subclass,weight,delta,gamma)
+        super().__init__(name,schedule,subclass,weight,delta,gamma)
         
     def call(self,p,y):
         flag = y['flag']
@@ -153,9 +153,9 @@ class HeatmapUnifiedFocalLoss(UnifiedFocalLoss):
         return loss
 
 class PAFUnifiedFocalLoss(UnifiedFocalLoss):
-    def __init__(self,name,shcedule,weight,delta,gamma):
+    def __init__(self,name,schedule,weight,delta,gamma):
         subclass = {'multi_people_heatmap':common.human_skeleton,'leading_role_heatmap':common.human_skeleton,'golfclub_heatmap':[(0,1)]}[name]
-        super().__init__(name,shcedule,subclass,weight,delta,gamma)
+        super().__init__(name,schedule,subclass,weight,delta,gamma)
         
     def call(self,p,y):
         flag = y['flag']
@@ -182,8 +182,8 @@ class PAFUnifiedFocalLoss(UnifiedFocalLoss):
         return loss
 
 # class AUXUnifiedFocalLoss(UnifiedFocalLoss):
-#     def __init__(self,name,shcedule,weight,delta,gamma):
-#         super().__init__(name,shcedule,['heatmap','paf'],weight,delta,gamma)
+#     def __init__(self,name,schedule,weight,delta,gamma):
+#         super().__init__(name,schedule,['heatmap','paf'],weight,delta,gamma)
         
 #     def call(self,p,y):
 #         flag = y['flag']
@@ -220,9 +220,9 @@ class PAFUnifiedFocalLoss(UnifiedFocalLoss):
 #         return loss
 
 # class HeatmapUnifiedFocalLoss(BaseLoss):
-#     def __init__(self,name,shcedule,weight,delta,gamma):
+#     def __init__(self,name,schedule,weight,delta,gamma):
 #         subclass = {'multi_people_heatmap':common.human_keypoints,'leading_role_heatmap':common.human_keypoints,'golfclub_heatmap':common.golfclub_keypoints}[name]
-#         super().__init__(name,shcedule,subclass,weight=weight,delta=delta,gamma=gamma)
+#         super().__init__(name,schedule,subclass,weight=weight,delta=delta,gamma=gamma)
         
 #     def call(self,p,y):
 #         flag = y['flag']
@@ -274,9 +274,9 @@ class PAFUnifiedFocalLoss(UnifiedFocalLoss):
 #         return loss
             
 class ConfidenceFocalLoss(BaseLoss):
-    def __init__(self,name,shcedule,delta,gamma,label_smoothing):
+    def __init__(self,name,schedule,delta,gamma,label_smoothing):
         subclass = {'leading_role_keypoints':common.human_keypoints,'golfclub_keypoints':common.golfclub_keypoints,'leading_role_bbox':None}[name]
-        super().__init__(name,shcedule,subclass,delta=delta,gamma=gamma,label_smoothing=label_smoothing)
+        super().__init__(name,schedule,subclass,delta=delta,gamma=gamma,label_smoothing=label_smoothing)
         
     def call(self,p,y):
         flag = y['flag']
@@ -350,9 +350,9 @@ class ConfidenceFocalLoss(BaseLoss):
         return loss
 
 # class KeypointsRMSE(BaseLoss):
-#     def __init__(self,name,shcedule,tolerance):
+#     def __init__(self,name,schedule,tolerance):
 #         subclass = {'leading_role_keypoints':common.human_keypoints,'golfclub_keypoints':common.golfclub_keypoints}[name]
-#         super().__init__(name,shcedule,subclass,tolerance=tolerance)
+#         super().__init__(name,schedule,subclass,tolerance=tolerance)
         
 #     def call(self,p,y):
 #         flag = y['flag']
@@ -385,9 +385,9 @@ class ConfidenceFocalLoss(BaseLoss):
 #         return loss
 
 class KeypointsPsuedoBBox(BaseLoss):
-    def __init__(self,name,shcedule,bbox_size):
+    def __init__(self,name,schedule,bbox_size):
         subclass = {'leading_role_keypoints':common.human_keypoints,'golfclub_keypoints':common.golfclub_keypoints}[name]
-        super().__init__(name,shcedule,subclass,bbox_size=bbox_size)
+        super().__init__(name,schedule,subclass,bbox_size=bbox_size)
         
     def call(self,p,y):
         flag = y['flag']
@@ -456,8 +456,8 @@ class KeypointsPsuedoBBox(BaseLoss):
         return loss
 
 class BBoxGIOU(BaseLoss):
-    def __init__(self,name,shcedule):
-        super().__init__(name,shcedule,None)
+    def __init__(self,name,schedule):
+        super().__init__(name,schedule,None)
         
     def call(self,p,y):
         flag = y['flag']
