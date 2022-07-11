@@ -94,6 +94,7 @@ def record_inference(Config,training_epoch_count,image,label,random_state=np.ran
     image = np.clip(image,0,1)
     
     image_shape = np.array(image.shape[1:3][::-1])
+    batch_size = image.shape[0]
     
     label = {s:t.cpu().numpy() if not isinstance(t,dict) else {u:v.cpu().numpy() for u,v in t.items()} for s,t in label.items()}
     
@@ -103,7 +104,7 @@ def record_inference(Config,training_epoch_count,image,label,random_state=np.ran
             heatmap = heatmap.transpose([0,2,3,1])
             return heatmap
         except KeyError:
-            return None
+            return [None]*batch_size
     multi_people_heatmap = get_heatmap('multi_people_heatmap')
     leading_role_heatmap = get_heatmap('leading_role_heatmap')
     golfclub_heatmap = get_heatmap('golfclub_heatmap')
@@ -114,7 +115,7 @@ def record_inference(Config,training_epoch_count,image,label,random_state=np.ran
             paf = paf.transpose([0,2,3,1])
             return paf
         except KeyError:
-            return None
+            return [None]*batch_size
     multi_people_paf = get_paf('multi_people_heatmap')
     leading_role_paf = get_paf('leading_role_heatmap')
     golfclub_paf = get_paf('golfclub_heatmap')
@@ -125,7 +126,7 @@ def record_inference(Config,training_epoch_count,image,label,random_state=np.ran
             cf = label[name]['cf']
             return xy,cf
         except KeyError:
-            return None,None
+            return [None]*batch_size,[None]*batch_size
     leading_role_keypoints_xy,leading_role_keypoints_cf = get_coor_cf('leading_role_keypoints')
     golfclub_keypoints_xy,golfclub_keypoints_cf = get_coor_cf('golfclub_keypoints')
     
@@ -135,7 +136,7 @@ def record_inference(Config,training_epoch_count,image,label,random_state=np.ran
             cf = label['leading_role_bbox']['cf']
             return xywh,cf
         except KeyError:
-            return None,None
+            return [None]*batch_size,[None]*batch_size
     leading_role_bbox_xywh,leading_role_bbox_cf = get_bbox_cf()
     
     save_path.mkdir(parents=True,exist_ok=True)
