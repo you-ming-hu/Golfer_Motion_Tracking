@@ -30,6 +30,7 @@ optimizer = core.utils.get_optimizer(model,Config)
 lr_scheduler = core.utils.get_lr_scheduler(optimizer,Config)
 
 writers = core.utils.get_writers(Config)
+loggers = core.utils.get_loggers(Config)
 
 core.utils.save_config(Config)
 
@@ -50,13 +51,16 @@ torch.manual_seed(Config.AutoGenerate.RandomSeed.DatasetShuffle)
 for _ in range(training_epochs):
     #training
     stage = stages[0]
-    print('='*50,f'Epoch: {training_epoch_count} {stage}','='*50)
+    logger = loggers[stage]
+    print_flag = '='*50 + f'  Epoch: {training_epoch_count} {stage}  ' + '='*50
+    logger.info(print_flag)
+    print(print_flag)
     dataloader = dataloaders[stage](training_epoch_count)
     progression_per_step = 1 / len(dataloader)
     writer = writers[stage]
     
     model.train()
-    for batch_data in dataloader:
+    for step,batch_data in enumerate(dataloader):
         batch_data = {s:t.to(device) if not isinstance(t,dict) else {u:v.to(device) for u,v in t.items()} for s,t in batch_data.items()}
         
         training_progression += progression_per_step
@@ -78,10 +82,12 @@ for _ in range(training_epochs):
         
         if training_step_count % steps_per_record == 0:
             core.utils.update_stage_result(dataloader,loss_func.result())
+            core.utils.update_stage_logger(step,len(dataloader),logger,loss_func.result())
             loss_func.log(writer,training_data_count)
             writer.add_scalar('learning_rate',lr,training_data_count)
     
     if training_step_count % steps_per_record != 0:
+        core.utils.update_stage_logger(len(dataloader),len(dataloader),logger,loss_func.result())
         loss_func.log(writer,training_data_count)
         writer.add_scalar('learning_rate',lr,training_data_count)
     
@@ -89,7 +95,10 @@ for _ in range(training_epochs):
                 
     #validation
     stage = stages[1]
-    print('='*50,f'Epoch: {training_epoch_count} {stage}','='*50)
+    logger = loggers[stage]
+    print_flag = '='*50 + f'  Epoch: {training_epoch_count} {stage}  ' + '='*50
+    logger.info(print_flag)
+    print(print_flag)
     dataloader = dataloaders[stage](training_epoch_count)
     writer = writers[stage]
     
@@ -109,6 +118,7 @@ for _ in range(training_epochs):
         core.utils.record_inference(Config,training_epoch_count,batch_data['image'],output,save_inference_random_state)
     
     lr_scheduler.epoch(training_epoch_count,loss_func.losses)
+    core.utils.update_stage_logger(len(dataloader),len(dataloader),logger,loss_func.result())
     loss_func.log(writer,training_data_count)
 
     training_epoch_count+=1

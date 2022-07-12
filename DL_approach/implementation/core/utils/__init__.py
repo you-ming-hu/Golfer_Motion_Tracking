@@ -3,6 +3,7 @@ import torch
 from torch.utils.tensorboard.writer import SummaryWriter
 import pickle
 import numpy as np
+import logging
 
 from .configuration import  initialize_config, get_config
 from .inference import visualize
@@ -54,6 +55,18 @@ def get_writers(Config):
     val_writer = SummaryWriter(pathlib.Path(Config.AutoGenerate.SavePath.Logging,'record',Config.AutoGenerate.TrainStages[1]).as_posix())
     return {k:v for k,v in zip(Config.AutoGenerate.TrainStages,(train_writer, val_writer))}
 
+def get_loggers(Config):
+    train_logger = logging.getLogger(Config.AutoGenerate.TrainStages[0])
+    val_logger = logging.getLogger(Config.AutoGenerate.TrainStages[1])
+
+    train_logger.setLevel(logging.INFO)
+    val_logger.setLevel(logging.INFO)
+
+    train_logger.addHandler(logging.FileHandler(pathlib.Path(Config.AutoGenerate.SavePath.Logging,Config.AutoGenerate.TrainStages[0]).with_suffix('.txt').as_posix()))
+    val_logger.addHandler(logging.FileHandler(pathlib.Path(Config.AutoGenerate.SavePath.Logging,Config.AutoGenerate.TrainStages[1]).with_suffix('.txt').as_posix()))
+    
+    return {k:v for k,v in zip(Config.AutoGenerate.TrainStages,(train_logger, val_logger))}
+
 def get_model(Config):
     model = core.model.Model(**Config.Model)
     return model
@@ -76,6 +89,17 @@ def save_config(Config):
 
 def update_stage_result(dataloader,losses):
     dataloader.set_postfix(**{k:'{:.4f}'.format(v) if v is not None else 'None' for k,v in losses.items()})
+    
+def update_stage_logger(step,steps_per_epoch,logger,losses):
+    log_string = []
+    log_string.append('-'*20 + f'  {step} / {steps_per_epoch}  ' + '-'*20)
+    for k,v in losses.items():
+        if v is not None:
+            log_string.append(f'{k} = {v:.4f}')
+        else:
+            log_string.append(f'{k} = None')
+    log_string = '\n'.join(log_string)
+    logger.info(log_string)
     
 def save_model(model,epoch_count,Config):
     save_root = pathlib.Path(Config.AutoGenerate.SavePath.ModelWeights)
