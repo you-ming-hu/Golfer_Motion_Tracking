@@ -63,7 +63,7 @@ class AttentionLayer(torch.nn.Module):
         
     def init_build(self,x):
         b,c,h,w = x.shape
-        PE = torch.nn.Parameter(torch.nn.init.orthogonal_(torch.empty(h*w,self.qk_dim)),requires_grad=True)
+        PE = torch.nn.Parameter(torch.nn.init.orthogonal_(torch.empty(h*w,self.qk_dim,device=x.device)),requires_grad=True)
         self.PE = PE.transpose(0,1).view(self.qk_dim,h,w)[None,...]
         self.built = True
 
