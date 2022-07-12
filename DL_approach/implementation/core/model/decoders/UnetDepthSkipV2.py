@@ -81,7 +81,7 @@ class AttentionLayer(torch.nn.Module):
         k = k.flatten(2) #(B,C,H*W)
         v = v.flatten(2).transpose(1, 2) #(B,H*W,O)
         
-        qk = torch.matmul(q,k)/torch.sqrt(torch.tensor(self.qk_dim,dtype=torch.float32)) #(B,H*W,H*W)
+        qk = torch.matmul(q,k)/torch.sqrt(torch.tensor(self.qk_dim,dtype=torch.float32,device=x.device)) #(B,H*W,H*W)
         qk = self.softmax(qk)
         
         out = torch.matmul(qk,v) #(B,H*W,O)
