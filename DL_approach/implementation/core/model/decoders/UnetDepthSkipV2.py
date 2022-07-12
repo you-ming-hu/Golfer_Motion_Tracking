@@ -69,7 +69,7 @@ class AttentionLayer(torch.nn.Module):
 
     def forward(self, x):
         if not self.built:
-            self.init_built(x)
+            self.init_build(x)
             
         b,c,h,w = x.shape
 
