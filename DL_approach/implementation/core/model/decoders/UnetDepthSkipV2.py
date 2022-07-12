@@ -64,7 +64,7 @@ class AttentionLayer(torch.nn.Module):
     def init_build(self,x):
         b,c,h,w = x.shape
         PE = torch.nn.Parameter(torch.nn.init.orthogonal_(torch.empty(h*w,self.qk_dim)),requires_grad=True)
-        self.PE = PE.transpose(0,1).view(self.PE_dim,h,w)[None,...]
+        self.PE = PE.transpose(0,1).view(self.qk_dim,h,w)[None,...]
         self.built = True
 
     def forward(self, x):
@@ -81,7 +81,7 @@ class AttentionLayer(torch.nn.Module):
         k = k.flatten(2) #(B,C,H*W)
         v = v.flatten(2).transpose(1, 2) #(B,H*W,O)
         
-        qk = torch.matmul(q,k)/torch.sqrt(self.qk_dim) #(B,H*W,H*W)
+        qk = torch.matmul(q,k)/torch.sqrt(torch.tensor(self.qk_dim,dtype=torch.float32)) #(B,H*W,H*W)
         qk = self.softmax(qk)
         
         out = torch.matmul(qk,v) #(B,H*W,O)
