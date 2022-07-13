@@ -141,7 +141,6 @@ class AttentionUpsample(torch.nn.Module):
         
         self.Q = torch.nn.Conv2d(in_channels,self.qk_dim,1)
         self.K = torch.nn.Conv2d(in_channels,self.qk_dim,1)
-        self.V = torch.nn.Conv2d(in_channels,in_channels,1)
         self.softmax = torch.nn.Softmax(dim=3)
         
         self.mlp = torch.nn.Sequential(
@@ -180,8 +179,7 @@ class AttentionUpsample(torch.nn.Module):
         k = self.patch_reshape(k,self.patch_size) #(B, sh, sw, C, ph, pw)
         k = k + self.pos_encode
         
-        v = self.V(x) #(B,O,Sh,Sw)
-        v = self.patch_reshape(v,self.patch_size) #(B, sh, sw, O, ph, pw)
+        v = self.patch_reshape(x,self.patch_size) #(B, sh, sw, O, ph, pw)
         
         x = torch.nn.functional.interpolate(x, scale_factor=2, mode="bilinear",align_corners=False)
         

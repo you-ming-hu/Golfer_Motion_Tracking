@@ -142,7 +142,7 @@ class AttentionUpsample(torch.nn.Module):
         self.Q = torch.nn.Conv2d(in_channels,self.qk_dim,1)
         self.K = torch.nn.Conv2d(in_channels,self.qk_dim,1)
         self.V = torch.nn.Conv2d(in_channels,in_channels,1)
-        self.softmax = torch.nn.Softmax(dim=3)
+        self.softmax = torch.nn.Softmax(dim=4)
         
         self.mlp = torch.nn.Sequential(
             torch.nn.Conv2d(in_channels, in_channels, kernel_size=1),
