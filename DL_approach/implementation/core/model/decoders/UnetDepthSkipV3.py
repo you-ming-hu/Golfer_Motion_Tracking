@@ -13,7 +13,7 @@ class Decoder(BaseDecoder):
         encoder_channels,
         out_channels,
         squeeze = 4,
-        us_pathch = (9,16),
+        us_patch = (9,16),
         use_batchnorm=True,
         attention_type=None):
         super().__init__(encoder_channels=encoder_channels,out_channels=out_channels)
@@ -25,7 +25,7 @@ class Decoder(BaseDecoder):
         skip_channels = list(encoder_channels[1:]) + [0]
         
         self.head = AttentionHead(head_channels,squeeze)
-        kwargs = dict(use_batchnorm=use_batchnorm, attention_type=attention_type,us_pathch=us_pathch,us_squeeze=squeeze)
+        kwargs = dict(use_batchnorm=use_batchnorm, attention_type=attention_type,us_patch=us_patch,us_squeeze=squeeze)
         self.blocks = torch.nn.ModuleList([DecoderBlock(in_ch, skip_ch, out_ch, **kwargs) for in_ch, skip_ch, out_ch in zip(in_channels, skip_channels, self.out_channels)])
         self.depth_skips = torch.nn.ModuleList([torch.nn.Conv2d(f,out_channels[-1],1) for f in [head_channels]+out_channels[:-1]])
 
@@ -97,13 +97,13 @@ class DecoderBlock(torch.nn.Module):
         in_channels,
         skip_channels,
         out_channels,
-        us_pathch,
+        us_patch,
         us_squeeze,
         use_batchnorm=True,
         attention_type=None,
     ):
         super().__init__()
-        self.upsample = AttentionUpsample(in_channels,us_pathch,us_squeeze)
+        self.upsample = AttentionUpsample(in_channels,us_patch,us_squeeze)
         
         self.conv1 = md.Conv2dReLU(
             in_channels + skip_channels,
