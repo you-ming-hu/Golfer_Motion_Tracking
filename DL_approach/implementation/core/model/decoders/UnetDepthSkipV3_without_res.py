@@ -198,6 +198,5 @@ class AttentionUpsample(torch.nn.Module):
         
         out = torch.matmul(qk,v) #(B, sh, sw, ph*2*pw*2, O)
         out = self.out_reshape(out) #(B, O, Sh*2, Sw*2)
-        # out = self.mlp(out) + x
         out = self.mlp(out)
         return out
