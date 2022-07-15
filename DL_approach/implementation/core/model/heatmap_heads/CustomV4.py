@@ -30,12 +30,7 @@ class HeatmapHead(BaseHeatmapHead):
         
         self.layers = torch.nn.Sequential(*[AttentionLayer(pe_dim,qk_dim,head,expand) for _ in range(layers)])
         
-        self.final = torch.nn.Sequential(
-            torch.nn.Conv2d(pe_dim,256,1),
-            torch.nn.Mish(),
-            torch.nn.Conv2d(256,128,1),
-            torch.nn.Mish(),
-            torch.nn.Conv2d(128,num_classes,1))
+        self.final = torch.nn.Conv2d(pe_dim,num_classes,1)
         
     def forward(self,x):
         B,C,H,W = x.shape
