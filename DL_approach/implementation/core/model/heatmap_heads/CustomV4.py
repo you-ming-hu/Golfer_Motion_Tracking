@@ -58,7 +58,7 @@ class AttentionLayer(torch.nn.Module):
         self.head = head
         
         self.QKV = torch.nn.Linear(in_dim,qk_dim*2+in_dim)
-        self.softmax = torch.nn.Softmax(-1)
+        self.softmax = torch.nn.Softmax(-2)
         
         self.mlp = torch.nn.Sequential(
             torch.nn.Linear(in_dim,in_dim*expand),
