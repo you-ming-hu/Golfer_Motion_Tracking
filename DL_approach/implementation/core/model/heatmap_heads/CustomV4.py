@@ -38,6 +38,7 @@ class HeatmapHead(BaseHeatmapHead):
             torch.nn.Conv2d(128,num_classes,1))
         
     def forward(self,x):
+        B,C,H,W = x.shape
         x = self.extractor(x)
         b,c,h,w = x.shape
         x = x + self.pos_encoding #(B,C,h,w)
@@ -49,7 +50,7 @@ class HeatmapHead(BaseHeatmapHead):
         #(B,h*w,c)
         x = x.reshape(b,h,w,c)
         x = x.permute(0,3,1,2)
-        x = F.interpolate(x, (h,w), mode="bilinear",align_corners=False)
+        x = F.interpolate(x, (H,W), mode="bilinear",align_corners=False)
         x = self.final(x)
         return x
     
