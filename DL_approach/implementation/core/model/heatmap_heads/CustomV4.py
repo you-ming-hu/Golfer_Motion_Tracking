@@ -30,7 +30,7 @@ class HeatmapHead(BaseHeatmapHead):
         
         self.layers = torch.nn.Sequential(*[AttentionLayer(pe_dim,qk_dim,head,expand) for _ in range(layers)])
         
-        self.final = torch.nn.Conv2d(pe_dim,num_classes,1)
+        self.final = torch.nn.Conv2d(image_dim*heatmap_patch**2,num_classes,1)
         
     def forward(self,x):
         B,C,H,W = x.shape
@@ -44,8 +44,10 @@ class HeatmapHead(BaseHeatmapHead):
             x = l(x)
         #(B,h*w,c)
         x = x.reshape(b,h,w,c)
-        x = x.permute(0,3,1,2)
-        x = F.interpolate(x, (H,W), mode="bilinear",align_corners=False)
+        x = x.permute(0,3,1,2) #(b,c,h,w)
+        x = x.reshape(b,H//h,W//w,c//(H//h*W//w),h,w) #(b,ph,pw,c,h,w)
+        x = x.permute(0,3,4,1,5,2) #(b,ph,pw,c,h,w) -> (b,c,h,ph,w,pw)
+        x = x.reshape(b,c//(H//h*W//w),H,W)
         x = self.final(x)
         return x
     
