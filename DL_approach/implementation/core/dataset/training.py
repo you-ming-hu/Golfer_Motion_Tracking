@@ -1,4 +1,3 @@
-from sys import ps1, ps2
 import numpy as np
 from pycocotools.coco import COCO
 import pathlib
