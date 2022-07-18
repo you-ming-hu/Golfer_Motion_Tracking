@@ -1,6 +1,6 @@
 import torch
 
-from segmentation_models_pytorch.decoders.manet.decoder import DecoderBlock,PAB,MFAB
+from .segmentation_models_pytorch.manet import DecoderBlock,PAB,MFAB
 
 from .base import BaseDecoder
 

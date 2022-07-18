@@ -1,11 +1,10 @@
 import torch
 import numpy as np
-from segmentation_models_pytorch.base import initialization as init
-from segmentation_models_pytorch.encoders import get_encoder
-
+# from segmentation_models_pytorch.encoders import get_encoder as get_smp_encoder
 
 import core.dataset.common as common
 
+from . import encoders
 from . import decoders
 from . import detection_heads
 from . import heatmap_heads
@@ -33,7 +32,11 @@ class Model(torch.nn.Module):
             
     def get_encoder(self,name,weights):
         depth = 5
-        encoder = get_encoder(name=name,weights=weights,depth=depth)
+        # if name.startswith('@'):
+            # name = name.replace('@','')
+        encoder = getattr(encoders,name).Encoder(weights)
+        # else:
+        #     encoder = get_smp_encoder(name=name,weights=weights,depth=depth)
         encoder.stages = depth
         self.encoder = encoder
         
@@ -54,16 +57,38 @@ class Model(torch.nn.Module):
     def get_detection_head(self,name,**kwdarg):
         num_classes = human_keypoints_count*3 + golfclub_keypoints_count*3 + 5
         self.detection_head = getattr(detection_heads,name).DetectionHead(in_channels=self.encoder.out_channels[-1],num_classes=num_classes,**kwdarg)
-        
 
+    def initialize_decoder(self,module):
+        for m in module.modules():
+            if isinstance(m, torch.nn.Conv2d):
+                torch.nn.init.kaiming_uniform_(m.weight, mode="fan_in", nonlinearity="relu")
+                if m.bias is not None:
+                    torch.nn.init.constant_(m.bias, 0)
+
+            elif isinstance(m, torch.nn.BatchNorm2d):
+                torch.nn.init.constant_(m.weight, 1)
+                torch.nn.init.constant_(m.bias, 0)
+
+            elif isinstance(m, torch.nn.Linear):
+                torch.nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    torch.nn.init.constant_(m.bias, 0)
+
+    def initialize_head(self,module):
+        for m in module.modules():
+            if isinstance(m, (torch.nn.Linear, torch.nn.Conv2d)):
+                torch.nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    torch.nn.init.constant_(m.bias, 0)
+    
     def initialize(self,pretrain_weight=None):
         if pretrain_weight is not None:
             self.load_state_dict(pretrain_weight)
         else:
-            init.initialize_decoder(self.decoder)
-            init.initialize_head(self.heatmap_head)
+            self.initialize_decoder(self.decoder)
+            self.initialize_head(self.heatmap_head)
             if self.detection_head is not None:
-                init.initialize_head(self.detection_head)
+                self.initialize_head(self.detection_head)
             
     def freeze(self,encoder=False,decoder=False,detection_head=False,heatmap_head=False):
         if encoder:

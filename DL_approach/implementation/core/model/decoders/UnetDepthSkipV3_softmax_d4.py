@@ -2,7 +2,7 @@ import torch
 
 from .base import BaseDecoder
 
-from segmentation_models_pytorch.base import modules as md
+from .segmentation_models_pytorch import modules as md
 
         
 class Decoder(BaseDecoder):
