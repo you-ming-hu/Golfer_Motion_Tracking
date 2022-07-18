@@ -1,5 +1,5 @@
 
-from segmentation_models_pytorch.base import modules as md
+from .segmentation_models_pytorch import modules as md
 
 import torch
 import torch.nn.functional as F
