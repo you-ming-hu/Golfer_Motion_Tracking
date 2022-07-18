@@ -1,10 +1,11 @@
 import timm
-import torch
+from .base import BaseEncoder
 
-class Encoder(torch.nn.Module):
+class Encoder(BaseEncoder):
     def __init__(self,subtype):
-        super().__init__()
-        self.encoder = timm.create_model('convnext_'+subtype,pretrained=True)
+        encoder = timm.create_model('convnext_'+subtype,pretrained=True)
+        out_channels = [s.blocks[-1].mlp.fc2.out_features for s in encoder.stages]
+        super().__init__(encoder,out_channels)
         
     def forward(self,x):
         fms = []
