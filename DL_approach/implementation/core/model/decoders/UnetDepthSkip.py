@@ -24,7 +24,6 @@ class Decoder(BaseDecoder):
         self.depth_skips = torch.nn.ModuleList([torch.nn.Conv2d(f,out_channels[-1],1) for f in [head_channels]+out_channels[:-1]])
 
     def forward(self, *features):
-        features = features[1:]
         features = features[::-1]
 
         x = features[0]

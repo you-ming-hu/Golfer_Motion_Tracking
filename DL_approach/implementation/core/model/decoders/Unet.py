@@ -27,7 +27,6 @@ class Decoder(BaseDecoder):
         self.blocks = torch.nn.ModuleList(blocks)
 
     def forward(self, *features):
-        features = features[1:]
         features = features[::-1]
 
         x = features[0]
