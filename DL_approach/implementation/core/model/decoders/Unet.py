@@ -13,7 +13,7 @@ class Decoder(BaseDecoder):
         attention_type=None):
         super().__init__(encoder_channels=encoder_channels,out_channels=out_channels)
 
-        encoder_channels = encoder_channels[1:]
+        # encoder_channels = encoder_channels[1:]
         encoder_channels = encoder_channels[::-1]
 
         head_channels = encoder_channels[0]
