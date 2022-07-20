@@ -15,7 +15,7 @@ class Decoder(BaseDecoder):
         unet_use_batchnorm=True,
         unet_attention_type='scse',
         out_se_reduction = 4):
-        super().__init__(encoder_channels=encoder_channels,out_channels=[out_channels])
+        super().__init__(encoder_channels=encoder_channels,out_channels=out_channels)
         
         self.skip_layers = torch.nn.ModuleList([SkipAttention(in_ch,out_ch,p,h) for in_ch,out_ch,p,h in zip(encoder_channels,skip_channels,skip_patches,skip_heads)])
         
