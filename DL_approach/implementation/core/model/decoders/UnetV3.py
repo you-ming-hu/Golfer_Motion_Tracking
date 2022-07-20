@@ -12,7 +12,6 @@ class Decoder(BaseDecoder):
         skip_patches = [(9,16),(9,16),(3,4),(3,4)],
         skip_channels = [1024,512,256,128],
         skip_heads = [16,8,4,2],
-        unet_channels = [1024,512,256],
         unet_use_batchnorm=True,
         unet_attention_type='scse',
         out_se_reduction = 4):
@@ -23,10 +22,10 @@ class Decoder(BaseDecoder):
         unet_kwargs = dict(use_batchnorm=unet_use_batchnorm, attention_type=unet_attention_type)
         self.unet_blocks = torch.nn.ModuleList([
             DecoderBlock(in_ch, skip_ch, out_ch, **unet_kwargs) 
-            for in_ch, skip_ch, out_ch in zip([skip_channels[0]]+unet_channels[:-1], skip_channels[1:], unet_channels)])
+            for in_ch, skip_ch, out_ch in zip([skip_channels[0]]+out_channels[:-1], skip_channels[1:], out_channels)])
         
-        self.feature_pyramid = torch.nn.ModuleList([FeaturePyramid(s,ch) for s,ch in zip((3,2,1,0),[skip_channels[0]]+unet_channels)])
-        self.output_se = OutputSE(sum([l.proj.out_channels for l in self.feature_pyramid]),out_channels,out_se_reduction)
+        self.feature_pyramid = torch.nn.ModuleList([FeaturePyramid(s,ch) for s,ch in zip((3,2,1,0),[skip_channels[0]]+out_channels)])
+        self.output_se = OutputSE(sum([l.proj.out_channels for l in self.feature_pyramid]),out_channels[-1],out_se_reduction)
 
     def forward(self, *features):
         features = features[::-1]
