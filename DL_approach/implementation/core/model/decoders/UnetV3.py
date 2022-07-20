@@ -113,7 +113,7 @@ class SkipAttention(torch.nn.Module):
         qk = self.softmax(qk)
         
         out = torch.matmul(qk,v)
-        out = out.reshape(b, h//ph, w//pw, self.heads, ph, pw, pc).transpose(0,3,6,1,4,2,5).reshape(b,pc*self.heads,h,w)
+        out = out.reshape(b, h//ph, w//pw, self.heads, ph, pw, pc).permute(0,3,6,1,4,2,5).reshape(b,pc*self.heads,h,w)
         out = self.mlp(out) + x
         return out
     
