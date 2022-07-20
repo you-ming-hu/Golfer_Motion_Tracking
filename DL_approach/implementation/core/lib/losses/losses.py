@@ -89,7 +89,7 @@ class BaseLoss:
 #         return loss
 
 class UnifiedFocalLoss(BaseLoss):
-    def __init__(self,name,schedule,subclass,weight,delta,gamma,warp=0,shift=0):
+    def __init__(self,name,schedule,subclass,weight,delta,gamma,warp,shift):
         assert warp>=0
         assert 0<=shift<=1
         super().__init__(name,schedule,subclass,weight=weight,delta=delta,gamma=gamma,warp=warp,shift=shift)
@@ -140,9 +140,9 @@ class UnifiedFocalLoss(BaseLoss):
         return loss
     
 class HeatmapUnifiedFocalLoss(UnifiedFocalLoss):
-    def __init__(self,name,schedule,weight,delta,gamma):
+    def __init__(self,name,schedule,weight,delta,gamma,warp=0,shift=0):
         subclass = {'multi_people_heatmap':common.human_keypoints,'leading_role_heatmap':common.human_keypoints,'golfclub_heatmap':common.golfclub_keypoints}[name]
-        super().__init__(name,schedule,subclass,weight,delta,gamma)
+        super().__init__(name,schedule,subclass,weight,delta,gamma,warp,shift)
         
     def call(self,p,y):
         flag = y['flag']
@@ -170,9 +170,9 @@ class HeatmapUnifiedFocalLoss(UnifiedFocalLoss):
         return loss
 
 class PAFUnifiedFocalLoss(UnifiedFocalLoss):
-    def __init__(self,name,schedule,weight,delta,gamma):
+    def __init__(self,name,schedule,weight,delta,gamma,warp=0,shift=0):
         subclass = {'multi_people_heatmap':common.human_skeleton,'leading_role_heatmap':common.human_skeleton,'golfclub_heatmap':[(0,1)]}[name]
-        super().__init__(name,schedule,subclass,weight,delta,gamma)
+        super().__init__(name,schedule,subclass,weight,delta,gamma,warp,shift)
         
     def call(self,p,y):
         flag = y['flag']
