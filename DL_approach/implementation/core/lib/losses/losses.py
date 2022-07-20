@@ -89,18 +89,36 @@ class BaseLoss:
 #         return loss
 
 class UnifiedFocalLoss(BaseLoss):
-    def __init__(self,name,schedule,subclass,weight,delta,gamma):
-        super().__init__(name,schedule,subclass,weight=weight,delta=delta,gamma=gamma)
+    def __init__(self,name,schedule,subclass,weight,delta,gamma,warp=0,shift=0):
+        assert warp>=0
+        assert 0<=shift<=1
+        super().__init__(name,schedule,subclass,weight=weight,delta=delta,gamma=gamma,warp=warp,shift=shift)
         
     def call(self,p,y):
         p = torch.sigmoid(p)
         p = torch.stack([1-p,p],axis=1)
         y = torch.stack([1-y,y],axis=1)
         
+        if self.warp != 0:
+            p = self.warp_p(p,self.warp)
+        if self.shift != 0:
+            p = self.shift_p(p,self.shift)
+        
         tversky_losses = self.tversky_loss(p,y,self.delta,self.gamma) #(B,C,(S))
         focal_losses = self.focal_loss(p,y,self.delta,self.gamma)  #(B,(S),C)
         losses = self.weight * tversky_losses + (1-self.weight) * focal_losses  #(B,(S),C)
         return losses
+    
+    def warp_p(self,p,warp):
+        m = 0.5
+        D = 0.5
+        d = p-m
+        p = d * (torch.pow(torch.abs(d/D),warp)).clone().detach() + m
+        return p
+        
+    def shift_p(self,p,shift):
+        p = torch.minimum(torch.tensor(1,dtype=p.dtype,device=p.device),p+shift)
+        return p
         
     def tversky_loss(self,p,y,delta,gamma):
         p = torch.clip(p, epsilon, 1. - epsilon) #(B,2,(S),C,H,W)
@@ -108,14 +126,14 @@ class UnifiedFocalLoss(BaseLoss):
         fn = torch.sum(y * (1-p), axis=[-2,-1])
         fp = torch.sum((1-y) * p, axis=[-2,-1])
         dice = (tp + epsilon)/(tp + delta*fn + (1-delta)*fp + epsilon)
-        loss = (1-dice) * torch.pow(1-dice, gamma) #(B,2,(S),C)
+        loss = (1-dice) * (torch.pow(1-dice, gamma)).clone().detach() #(B,2,(S),C)
         loss = torch.sum(loss,axis=1) #(B,C,(S))
         return loss
         
     def focal_loss(self,p,y,delta,gamma):
         p = torch.clip(p, epsilon, 1. - epsilon) #(B,2,(S),C,H,W)
         ce = -y*torch.log(p)
-        focal = torch.pow(1 - p, gamma) * ce
+        focal = (torch.pow(1 - p, gamma)).clone().detach() * ce
         focal = torch.stack([focal[:,0,...]*(1 - delta),focal[:,1,...]*delta],axis=1) #(B,2,(S),C,H,W)
         loss = torch.sum(focal,axis=1) #(B,(S),C,H,W)
         loss = torch.mean(loss,axis=[-2,-1]) #(B,(S),C)
@@ -273,10 +291,23 @@ class PAFUnifiedFocalLoss(UnifiedFocalLoss):
 #         return loss
             
 class ConfidenceFocalLoss(BaseLoss):
-    def __init__(self,name,schedule,delta,gamma,label_smoothing):
+    def __init__(self,name,schedule,delta,gamma,label_smoothing,warp=0,shift=0):
         subclass = {'leading_role_keypoints':common.human_keypoints,'golfclub_keypoints':common.golfclub_keypoints,'leading_role_bbox':None}[name]
-        super().__init__(name,schedule,subclass,delta=delta,gamma=gamma,label_smoothing=label_smoothing)
+        assert warp>=0
+        assert 0<=shift<=1
+        super().__init__(name,schedule,subclass,delta=delta,gamma=gamma,label_smoothing=label_smoothing,warp=warp,shift=shift)
         
+    def warp_p(self,p,warp):
+        m = 0.5
+        D = 0.5
+        d = p-m
+        p = d * (torch.pow(torch.abs(d/D),warp)).clone().detach() + m
+        return p
+        
+    def shift_p(self,p,shift):
+        p = torch.minimum(torch.tensor(1,dtype=p.dtype,device=p.device),p+shift)
+        return p
+    
     def call(self,p,y):
         flag = y['flag']
         y = y['cf']
@@ -294,6 +325,11 @@ class ConfidenceFocalLoss(BaseLoss):
             y = (1-self.label_smoothing)*y + self.label_smoothing*(1-y)
             p = torch.stack([1-p,p],axis=1)
             y = torch.stack([1-y,y],axis=1)
+            
+            if self.warp != 0:
+                p = self.warp_p(p,self.warp)
+            if self.shift != 0:
+                p = self.shift_p(p,self.shift)
             
             losses = self.focal_loss(p,y,self.delta,self.gamma)
             
@@ -343,7 +379,7 @@ class ConfidenceFocalLoss(BaseLoss):
     def focal_loss(self,p,y,delta,gamma):
         p = torch.clip(p, epsilon, 1. - epsilon) #(B,2,C)
         ce = -y*torch.log(p)
-        focal = torch.pow(1 - p, gamma) * ce
+        focal = (torch.pow(1 - p, gamma)).clone().detach() * ce
         focal = torch.stack([focal[:,0,...]*(1 - delta),focal[:,1,...]*delta],axis=1) #(B,2,C)
         loss = torch.sum(focal,axis=1) #(B,C)
         return loss
