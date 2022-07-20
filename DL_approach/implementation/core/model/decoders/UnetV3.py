@@ -98,7 +98,8 @@ class SkipAttention(torch.nn.Module):
 
     def forward(self, x):
         pc,ph,pw = self.pos_encoding.shape
-            
+        self.pos_encoding = self.pos_encoding.to(x.device)
+        
         b,c,h,w = x.shape
 
         q = self.Q(x).view(b, self.heads, pc, h//ph, ph, w//pw, pw).permute(0,3,5,1,2,4,6)  + self.pos_encoding 
