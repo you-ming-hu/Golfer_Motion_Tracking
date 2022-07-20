@@ -88,7 +88,7 @@ class MFAB(nn.Module):
 
     def forward(self, x, skip=None):
         x = self.hl_conv(x)
-        x = F.interpolate(x, scale_factor=2, mode="nearest")
+        x = F.interpolate(x, scale_factor=2, mode="bilinear", align_corners=False)
         attention_hl = self.SE_hl(x)
         if skip is not None:
             attention_ll = self.SE_ll(skip)
@@ -119,7 +119,7 @@ class DecoderBlock(nn.Module):
         )
 
     def forward(self, x, skip=None):
-        x = F.interpolate(x, scale_factor=2, mode="nearest")
+        x = F.interpolate(x, scale_factor=2, mode="bilinear", align_corners=False)
         if skip is not None:
             x = torch.cat([x, skip], dim=1)
         x = self.conv1(x)
