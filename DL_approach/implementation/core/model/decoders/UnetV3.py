@@ -17,7 +17,7 @@ class Decoder(BaseDecoder):
         out_se_reduction = 4):
         super().__init__(encoder_channels=encoder_channels,out_channels=out_channels)
         
-        self.skip_layers = torch.nn.ModuleList([SkipAttention(in_ch,out_ch,p,h) for in_ch,out_ch,p,h in zip(encoder_channels,skip_channels,skip_patches,skip_heads)])
+        self.skip_layers = torch.nn.ModuleList([SkipAttention(in_ch,out_ch,p,h) for in_ch,out_ch,p,h in zip(encoder_channels[::-1],skip_channels,skip_patches,skip_heads)])
         
         unet_kwargs = dict(use_batchnorm=unet_use_batchnorm, attention_type=unet_attention_type)
         self.unet_blocks = torch.nn.ModuleList([
