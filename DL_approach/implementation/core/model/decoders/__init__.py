@@ -4,6 +4,7 @@ from . import Plain
 
 from . import Unet
 from . import UnetV2
+from . import UnetV3
 
 from . import UnetDepthSkip
 from . import UnetDepthSkipV2
