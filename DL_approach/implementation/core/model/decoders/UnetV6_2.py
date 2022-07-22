@@ -25,7 +25,7 @@ class Decoder(BaseDecoder):
         
         self.feature_pyramid = torch.nn.ModuleList(
             [FeaturePyramid(s,in_ch,sk_ch,out_channels[-1])
-             for s,in_ch,sk_ch in zip((3,2,1,0),[encoder_channels[0]]+out_channels,[0]+encoder_channels[1:])])
+             for s,in_ch,sk_ch in zip((3,2,1,0),[encoder_channels[0]]+out_channels,encoder_channels)])
 
     def forward(self, *features):
         features = features[::-1]
