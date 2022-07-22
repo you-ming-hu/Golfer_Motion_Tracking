@@ -31,7 +31,7 @@ class Decoder(BaseDecoder):
         features = features[::-1]
         
         x = self.head(features[0])
-        output = self.feature_pyramid[0](x)
+        output = self.feature_pyramid[0](x,features[0])
 
         for i, block in enumerate(self.blocks):
             skip = features[i+1]
@@ -46,7 +46,7 @@ class FeaturePyramid(torch.nn.Module):
         self.scale = 2**stage
         self.proj = torch.nn.Conv2d(in_channel+skip_channel,out_channel,1)
         
-    def forward(self, x, skip=None):
+    def forward(self, x, skip):
         x = torch.concat([x,skip],dim=1)
         x = self.proj(x)
         if self.scale != 1:
