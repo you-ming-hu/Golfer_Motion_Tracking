@@ -11,6 +11,7 @@ from . import UnetV5
 from . import UnetV6
 from . import UnetV6_2
 from . import UnetV6_3
+from . import UnetV6_3_2
 
 from . import UnetDepthSkip
 from . import UnetDepthSkipV2
