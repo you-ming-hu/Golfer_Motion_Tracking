@@ -83,7 +83,7 @@ class Model(torch.nn.Module):
     
     def initialize(self,pretrain_weight=None):
         if pretrain_weight is not None:
-            self.load_state_dict(pretrain_weight)
+            self.load_state_dict(torch.load(pretrain_weight))
         else:
             self.initialize_decoder(self.decoder)
             self.initialize_head(self.heatmap_head)
