@@ -30,11 +30,11 @@ class Model(torch.nn.Module):
         else:
             self.detection_head = None
             
-    def get_encoder(self,name,weights):
+    def get_encoder(self,name,weights,aux_hog):
         depth = 5
         # if name.startswith('@'):
             # name = name.replace('@','')
-        encoder = getattr(encoders,name).Encoder(weights)
+        encoder = getattr(encoders,name).Encoder(weights,aux_hog)
         # else:
         #     encoder = get_smp_encoder(name=name,weights=weights,depth=depth)
         encoder.stages = depth
