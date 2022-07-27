@@ -113,8 +113,8 @@ def record_inference(Config,training_epoch_count,image,label,random_state=np.ran
     
     image = image.cpu().numpy()
     image = image.transpose([0,2,3,1])
-    image = image * np.array([0.229, 0.224, 0.225]) + np.array([0.485, 0.456, 0.406])
-    image = np.clip(image,0,1)
+    # image = image * np.array([0.229, 0.224, 0.225]) + np.array([0.485, 0.456, 0.406])
+    # image = np.clip(image,0,1)
     
     image_shape = np.array(image.shape[1:3][::-1])
     batch_size = image.shape[0]
