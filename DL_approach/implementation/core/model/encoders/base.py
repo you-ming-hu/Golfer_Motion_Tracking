@@ -29,10 +29,17 @@ class BaseEncoder(torch.nn.Module):
         hd_image = torch.max(torch.nn.functional.conv2d(img,hk,padding='same',groups=3),dim=1,keepdim=True)[0]
         mag_image = torch.sqrt(vd_image**2+hd_image**2)
         return mag_image
-            
+    
+    def HOG_max_min_norm(self,x):
+        max_v = torch.max(x,dim=[2,3],keepdim=True)[0]
+        min_v = torch.min(x,dim=[2,3],keepdim=True)[0]
+        x = (x-min_v)/(max_v-min_v)
+        return x
+    
     def forward(self,x):
         if self.aux_hog:
-            hog = torch.maximum(self.HOG_descriptor(x,2),self.HOG_descriptor(x,3)) ** 0.75
+            hog = torch.maximum(self.HOG_descriptor(x,2),self.HOG_descriptor(x,3)) ** 0.5
+            hog = self.HOG_max_min_norm(hog)
             x = torch.concat([x,hog],dim=1)
         fms = self.encoder(x)
         return fms
