@@ -21,7 +21,7 @@ class ConvNeXt(torch.nn.Module):
             ResBlock(64,3),
             ResBlock(64,5),
             ResBlock(64,7),
-            torch.nn.Conv2d(in_channel,64,3)
+            torch.nn.Conv2d(64,3,1)
         )
         self.body = timm.create_model('_'.join(['convnext',subtype]), pretrained=True, features_only=True)
         
