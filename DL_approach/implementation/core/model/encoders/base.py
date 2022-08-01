@@ -36,7 +36,7 @@ class BaseEncoder(torch.nn.Module):
     
     def forward(self,x):
         if self.aux_hog:
-            hog = torch.maximum(self.HOG_descriptor(x,2),self.HOG_descriptor(x,3)) ** 0.75
+            hog = torch.maximum(self.HOG_descriptor(x,2),self.HOG_descriptor(x,3)) ** 0.5
             hog = self.HOG_max_min_norm(hog)
             x = torch.concat([x,hog],dim=1)
         fms = self.encoder(x)
