@@ -23,14 +23,14 @@ class BaseEncoder(torch.nn.Module):
             hk = torch.tensor([1.,0.,-1.],device=img.device)[None,None,:,None].tile(3,1,1,1)
             vk = torch.tensor([-1.,0.,1.],device=img.device)[None,None,None,:].tile(3,1,1,1)
         
-        vd_image = torch.max(torch.nn.functional.conv2d(img,vk,padding='same',groups=3),dim=1,keepdim=True)[0]
-        hd_image = torch.max(torch.nn.functional.conv2d(img,hk,padding='same',groups=3),dim=1,keepdim=True)[0]
+        vd_image = torch.amax(torch.nn.functional.conv2d(img,vk,padding='same',groups=3),dim=1,keepdim=True)
+        hd_image = torch.amax(torch.nn.functional.conv2d(img,hk,padding='same',groups=3),dim=1,keepdim=True)
         mag_image = torch.sqrt(vd_image**2+hd_image**2)
         return mag_image
     
     def HOG_max_min_norm(self,x):
-        max_v = torch.max(x,dim=[2,3],keepdim=True)[0]
-        min_v = torch.min(x,dim=[2,3],keepdim=True)[0]
+        max_v = torch.amax(x,dim=[2,3],keepdim=True)
+        min_v = torch.amin(x,dim=[2,3],keepdim=True)
         x = (x-min_v)/(max_v-min_v)
         return x
     
