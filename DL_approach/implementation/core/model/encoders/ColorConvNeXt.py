@@ -30,11 +30,17 @@ class ColorRegressor(torch.nn.Module):
         self.centers = torch.nn.Parameter(centers)
         
         self.relu = torch.nn.ReLU()
-        cov = torch.rand(len(centers),3,3,dtype=torch.float32)*0.1 + torch.eye(3,dtype=torch.float32)
-        self.cov = torch.nn.Parameter(cov)
+        
+        diag = torch.ones(len(centers),3,dtype=torch.float32)
+        self.diag = torch.nn.Parameter(diag)
+        
+        sig = torch.rand(len(centers),3,3,dtype=torch.float32)*0.5
+        self.sig = torch.nn.Parameter(sig)
         
     def forward(self,x):
-        dist = D.MultivariateNormal(self.centers,self.relu(self.cov))
+        diag = self.relu(torch.diag_embed(self.diag))
+        cov = torch.matmul(self.sig, self.sig.transpose(-2,-1)) + diag
+        dist = D.MultivariateNormal(self.centers,cov)
         x = x.permute(0,2,3,1)[:,:,:,None,:]
         x = dist.log_prob(x)
         x = torch.exp(x)
