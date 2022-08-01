@@ -38,6 +38,9 @@ class ColorRegressor(torch.nn.Module):
         self.sig = torch.nn.Parameter(sig)
         
     def forward(self,x):
+        self.centers = self.centers.to(x.device)
+        self.diag = self.diag.to(x.device)
+        self.sig = self.sig.to(x.device)
         diag = self.relu(torch.diag_embed(self.diag))
         cov = torch.matmul(self.sig, self.sig.transpose(-2,-1)) + diag
         dist = D.MultivariateNormal(self.centers,cov)
