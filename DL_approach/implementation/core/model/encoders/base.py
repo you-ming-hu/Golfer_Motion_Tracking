@@ -11,9 +11,7 @@ class BaseEncoder(torch.nn.Module):
             in_channel = 3
         self.aux_hog = aux_hog
         
-        if encoder_name.startswith('@'):
-            raise NotImplementedError
-        else:
+        if encoder_name is not None:
             self.encoder = timm.create_model('_'.join([encoder_name,subtype]), pretrained=True, features_only=True, in_chans=in_channel)
             self.out_channels = self.encoder.feature_info.channels()
             
