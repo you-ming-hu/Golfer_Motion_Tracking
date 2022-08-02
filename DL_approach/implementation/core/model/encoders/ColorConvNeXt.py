@@ -74,7 +74,7 @@ class ColorRegressor(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.gaussian = D.Normal(0,1)
-        self.centers = torch.tensor(list(itertools.product([0.,0.25,0.5,0.75,1.],repeat=3)),dtype=torch.float32)
+        self.centers = torch.nn.Parameter(torch.tensor(list(itertools.product([0.,0.25,0.5,0.75,1.],repeat=3)),dtype=torch.float32),requires_grad=False)
         self.proj = torch.nn.Sequential(
             torch.nn.Linear(3,8),
             torch.nn.Mish(True),
