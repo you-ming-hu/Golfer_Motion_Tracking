@@ -1,7 +1,7 @@
 import torch
 
 from .base import BaseEncoder
-from core.model.common import SwinTransformerBlock
+from core.model.modules import SwinTransformerBlock
 from timm.models.layers import trunc_normal_
 
 from core.dataset.common import uniform_input_image_size

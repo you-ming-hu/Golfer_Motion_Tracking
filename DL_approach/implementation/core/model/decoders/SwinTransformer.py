@@ -3,7 +3,7 @@ from timm.models.layers import trunc_normal_
 from einops import rearrange
 
 from .base import BaseDecoder
-from core.model.common import SwinTransformerBlock
+from core.model.modules import SwinTransformerBlock
 
 from core.dataset.common import uniform_input_image_size
 
