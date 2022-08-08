@@ -67,7 +67,9 @@ class Decoder(BaseDecoder):
             if inx == 0:
                 x = layer_up(features[0])
             else:
-                x = torch.cat([x,features[inx]],-1)
+                print(x.shape)
+                print(features[inx].shape)
+                x = torch.concat([x,features[inx]],-1)
                 x = concat_back_dim(x)
                 x = layer_up(x)
 
