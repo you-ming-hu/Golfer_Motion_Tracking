@@ -70,7 +70,6 @@ class Decoder(BaseDecoder):
                 x = torch.concat([x,features[inx+1]],-1)
                 x = concat_back_dim(x)
                 x = layer_up(x)
-                print(x.shape)
 
         x = self.norm_up(x)  # B L C
         return x
@@ -111,7 +110,7 @@ class BasicLayer_up(torch.nn.Module):
                 drop_path=drop_path[i])
             for i in range(depth)])
 
-        if upsample is not None:
+        if upsample:
             self.upsample = PatchExpand(input_resolution, dim=dim)
         else:
             self.upsample = None
