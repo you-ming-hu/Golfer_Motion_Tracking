@@ -70,6 +70,7 @@ class Decoder(BaseDecoder):
                 x = torch.concat([x,features[inx+1]],-1)
                 x = concat_back_dim(x)
                 x = layer_up(x)
+                print(x.shape)
 
         x = self.norm_up(x)  # B L C
         return x
