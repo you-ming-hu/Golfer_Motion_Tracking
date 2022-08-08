@@ -20,7 +20,7 @@ class Decoder(BaseDecoder):
         
         super().__init__(encoder_channels=encoder_channels,out_channels=out_channels)
         encoder_channels = encoder_channels[::-1]
-        patches_resolution = [IMAGE_SIZE[0] // patch_size[0], IMAGE_SIZE[1] // patch_size[1]]
+        patches_resolution = [IMAGE_SIZE[0] // patch_size, IMAGE_SIZE[1] // patch_size]
         num_layers = len(encoder_channels)
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]  # stochastic depth decay rule
         

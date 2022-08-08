@@ -90,7 +90,7 @@ class SwinTransformer(torch.nn.Module):
 class PatchEmbed(torch.nn.Module):
     def __init__(self, img_size, patch_size, in_chans, embed_dim):
         super().__init__()
-        patches_resolution = [img_size[0] // patch_size[0], img_size[1] // patch_size[1]]
+        patches_resolution = [img_size[0] // patch_size, img_size[1] // patch_size]
 
         self.patches_resolution = patches_resolution
         self.num_patches = patches_resolution[0] * patches_resolution[1]
