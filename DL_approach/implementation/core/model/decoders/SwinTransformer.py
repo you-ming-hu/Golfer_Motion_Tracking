@@ -5,7 +5,7 @@ from einops import rearrange
 from .base import BaseDecoder
 from core.model.modules import SwinTransformerBlock
 
-from core.dataset.common import uniform_input_image_size
+from core.dataset.common import uniform_input_image_size,heatmap_downsample
 
 
 IMAGE_SIZE = [uniform_input_image_size[1],uniform_input_image_size[0]]
@@ -70,10 +70,11 @@ class Decoder(BaseDecoder):
                 x = torch.concat([x,features[inx+1]],-1)
                 x = concat_back_dim(x)
                 x = layer_up(x)
-                print(x.shape)
 
         x = self.norm_up(x)  # B L C
-        print(x.shape)
+        B,L,C = x.shape
+        x = x.view(B,IMAGE_SIZE[0]//heatmap_downsample,IMAGE_SIZE[1]//heatmap_downsample,C)
+        x = x.permute(0,3,1,2)
         return x
     
 class PatchExpand(torch.nn.Module):
