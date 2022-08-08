@@ -26,7 +26,7 @@ class Decoder(BaseDecoder):
         
         self.layers_up = torch.nn.ModuleList()
         self.concat_back_dim = torch.nn.ModuleList()
-        for l, channel, depth, head in enumerate(encoder_channels,depths,num_heads):
+        for l, (channel, depth, head) in enumerate(zip(encoder_channels,depths,num_heads)):
             if l==0 :
                 concat_linear = torch.nn.Identity()
                 layer_up = PatchExpand(
@@ -63,7 +63,7 @@ class Decoder(BaseDecoder):
     def forward(self, *features):
         features = features[::-1]
         
-        for inx, layer_up, concat_back_dim in enumerate(self.layers_up, self.concat_back_dim):
+        for inx, (layer_up, concat_back_dim) in enumerate(zip(self.layers_up, self.concat_back_dim)):
             if inx == 0:
                 x = layer_up(features[0])
             else:

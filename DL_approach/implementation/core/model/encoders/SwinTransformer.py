@@ -48,7 +48,7 @@ class SwinTransformer(torch.nn.Module):
         self.out_channels = [int(embed_dim*2**k) for k in range(num_layers)]
 
         self.layers = torch.nn.ModuleList()
-        for l, channel, depth, head in enumerate(self.out_channels,depths,num_heads):
+        for l, (channel, depth, head) in enumerate(zip(self.out_channels,depths,num_heads)):
             layer = BasicLayer(
                 dim=channel,
                 input_resolution=(patches_resolution[0] // (2 ** l),patches_resolution[1] // (2 ** l)),
