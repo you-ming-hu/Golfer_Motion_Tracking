@@ -5,7 +5,7 @@ from einops import rearrange
 from .base import BaseDecoder
 from core.model.common import SwinTransformerBlock
 
-from dataset.common import uniform_input_image_size
+from core.dataset.common import uniform_input_image_size
 
 
 IMAGE_SIZE = [uniform_input_image_size[1],uniform_input_image_size[0]]
