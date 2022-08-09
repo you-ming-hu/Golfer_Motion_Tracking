@@ -7,3 +7,4 @@ from . import CustomV3_reverse
 from . import CustomV3_reverse_expand
 from . import CustomV4
 from . import CustomV4_interpolate
+from . import CustomV5
