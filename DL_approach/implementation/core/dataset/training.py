@@ -670,7 +670,7 @@ class DataAugProcessor(DataProcessorBase):
                 golfclub_heatmap[:,:,i] = self.create_heatmap(new_golfclub_keypoints[i], (t_w,t_h), hm_psize)
         golfclub_heatmap = cv2.resize(golfclub_heatmap,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
         
-        golfclub_paf = self.create_PAF(new_golfclub_keypoints[0],new_glofclub_confidence[0],new_golfclub_keypoints[1],1,(t_w,t_h),hm_psize)
+        golfclub_paf = self.create_PAF(new_golfclub_keypoints[0],new_glofclub_confidence[0],new_golfclub_keypoints[1],1,(t_w,t_h),hm_psize/2)
         golfclub_paf = cv2.resize(golfclub_paf,(hm_w,hm_h))
         golfclub_paf = golfclub_paf[None,...].astype(np.float32)
         
@@ -1004,7 +1004,7 @@ class DataNonAugProcessor(DataProcessorBase):
                 golfclub_heatmap[:,:,i] = self.create_heatmap(new_golfclub_keypoints[i], (t_w,t_h), hm_psize)
         golfclub_heatmap = cv2.resize(golfclub_heatmap,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
         
-        golfclub_paf = self.create_PAF(new_golfclub_keypoints[0],new_glofclub_confidence[0],new_golfclub_keypoints[1],1,(t_w,t_h),hm_psize)
+        golfclub_paf = self.create_PAF(new_golfclub_keypoints[0],new_glofclub_confidence[0],new_golfclub_keypoints[1],1,(t_w,t_h),hm_psize/2)
         golfclub_paf = cv2.resize(golfclub_paf,(hm_w,hm_h))
         golfclub_paf = golfclub_paf[None,...].astype(np.float32)
         
