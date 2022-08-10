@@ -36,8 +36,8 @@ def visualize(
     plt.subplot(2,2,3)
     plt.title('golfclub_heatmap',fontsize=50)
     plt.imshow(image)
-    # plt.imshow(cv2.resize(np.fmax(golfclub_heatmap.max(axis=-1),golfclub_paf.max(axis=-1)),image_shape),alpha=0.5,cmap='jet')
-    plt.imshow(cv2.resize(golfclub_heatmap.max(axis=-1),image_shape),alpha=0.5,cmap='jet')
+    plt.imshow(cv2.resize(np.fmax(golfclub_heatmap.max(axis=-1),golfclub_paf.max(axis=-1)),image_shape),alpha=0.5,cmap='jet')
+    # plt.imshow(cv2.resize(golfclub_heatmap.max(axis=-1),image_shape),alpha=0.5,cmap='jet')
     plt.axis(False)
 
     if (leading_role_keypoints_cf is not None) and (leading_role_keypoints_xy is not None):
