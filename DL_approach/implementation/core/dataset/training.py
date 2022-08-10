@@ -68,8 +68,8 @@ class DataReader:
             head_x = np.clip(head_x,0,img_w-1)
             head_y = np.clip(head_y,0,img_h-1)
             
-            grip_cf = 1 if (10<grip_x<img_w-1-10)&(10<grip_y<img_h-1-10) else 0
-            head_cf = 1 if (10<head_x<img_w-1-10)&(10<head_y<img_h-1-10) else 0
+            grip_cf = 1 #if (10<grip_x<img_w-1-10)&(10<grip_y<img_h-1-10) else 0
+            head_cf = 1 #if (10<head_x<img_w-1-10)&(10<head_y<img_h-1-10) else 0
             
             keypoints = np.array([[grip_x,grip_y],[head_x,head_y]])
             confidence = np.array([grip_cf,head_cf])
@@ -198,7 +198,7 @@ class DataAugProcessor(DataProcessorBase):
         self.aug_golfer_param = {
             'random_resize':{'prob':0.3,'scale':np.log(1.2)},
             'random_rot':{'prob':0.3,'degree':10},
-            'random_shift':{'prob':0.6,'head_outlying_rate':0.3,'lim':0.3}}
+            'random_shift':{'prob':0.6,'head_outlying_rate':0,'lim':0.3}}
     
     def process_coco_human(self,data):
         #load original data
@@ -670,7 +670,7 @@ class DataAugProcessor(DataProcessorBase):
                 golfclub_heatmap[:,:,i] = self.create_heatmap(new_golfclub_keypoints[i], (t_w,t_h), hm_psize)
         golfclub_heatmap = cv2.resize(golfclub_heatmap,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
         
-        golfclub_paf = self.create_PAF(new_golfclub_keypoints[0],new_glofclub_confidence[0],new_golfclub_keypoints[1],1,(t_w,t_h),hm_psize/2)
+        golfclub_paf = self.create_PAF(new_golfclub_keypoints[0],new_glofclub_confidence[0],new_golfclub_keypoints[1],1,(t_w,t_h),hm_psize)
         golfclub_paf = cv2.resize(golfclub_paf,(hm_w,hm_h))
         golfclub_paf = golfclub_paf[None,...].astype(np.float32)
         
@@ -1004,7 +1004,7 @@ class DataNonAugProcessor(DataProcessorBase):
                 golfclub_heatmap[:,:,i] = self.create_heatmap(new_golfclub_keypoints[i], (t_w,t_h), hm_psize)
         golfclub_heatmap = cv2.resize(golfclub_heatmap,(hm_w,hm_h)).transpose([2,0,1]).astype(np.float32)
         
-        golfclub_paf = self.create_PAF(new_golfclub_keypoints[0],new_glofclub_confidence[0],new_golfclub_keypoints[1],1,(t_w,t_h),hm_psize/2)
+        golfclub_paf = self.create_PAF(new_golfclub_keypoints[0],new_glofclub_confidence[0],new_golfclub_keypoints[1],1,(t_w,t_h),hm_psize)
         golfclub_paf = cv2.resize(golfclub_paf,(hm_w,hm_h))
         golfclub_paf = golfclub_paf[None,...].astype(np.float32)
         
