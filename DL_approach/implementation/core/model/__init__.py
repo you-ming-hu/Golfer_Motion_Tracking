@@ -37,7 +37,8 @@ class Model(torch.nn.Module):
         encoder = getattr(encoders,name).Encoder(weights,aux_hog,**kwdarg)
         # else:
         #     encoder = get_smp_encoder(name=name,weights=weights,depth=depth)
-        encoder.stages = depth
+        if not hasattr(encoder,'stages'):
+            encoder.stages = depth
         self.encoder = encoder
         
     def get_decoder(self,name,out_channels,**kwdarg):

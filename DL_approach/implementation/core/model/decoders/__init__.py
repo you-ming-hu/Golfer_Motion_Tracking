@@ -24,3 +24,4 @@ from . import UnetDepthSkipV3_softmax_d4
 from . import UnetDepthSkipV3_without_value
 
 from . import SwinTransformer
+from . import VisionTransformer
