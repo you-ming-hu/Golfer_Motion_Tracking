@@ -11,3 +11,4 @@ from . import CustomV4_interpolate
 from . import CustomV5
 
 from . import Simple
+from . import ResBlocks
