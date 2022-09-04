@@ -11,7 +11,7 @@ class HeatmapHead(BaseHeatmapHead):
             else:
                 block_channels[i] = [block_channels[i-1][-1]]+block_channels[i]
         
-        self.stem = torch.nn.Conv2d(in_channels,stem_channel,1) if in_channels != stem_channel else torch.nn.Identity()
+        self.stem = torch.nn.Conv2d(in_channels,stem_channel,1) if stem_channel is not None else torch.nn.Identity()
         self.blocks = torch.nn.ModuleList([self.create_block(block) for block in block_channels])
         self.skips = torch.nn.ModuleList([self.create_skip(block) for block in block_channels])
         self.final = torch.nn.Conv2d(block_channels[-1][-1],num_classes,1)
