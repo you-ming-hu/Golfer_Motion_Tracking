@@ -12,3 +12,4 @@ from . import CustomV5
 
 from . import Simple
 from . import ResBlocks
+from . import ResBlocksV2
